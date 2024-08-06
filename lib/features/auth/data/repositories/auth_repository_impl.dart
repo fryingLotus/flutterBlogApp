@@ -1,6 +1,7 @@
 import 'package:blogapp/core/error/exceptions.dart';
 import 'package:blogapp/core/error/failures.dart';
 import 'package:blogapp/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:blogapp/features/auth/domain/entities/user.dart';
 import 'package:blogapp/features/auth/domain/repository/auth_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -10,22 +11,21 @@ class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failures, String>> signInWithEmailPassword(
+  Future<Either<Failures, User>> signInWithEmailPassword(
       {required String email, required String password}) {
     // TODO: implement signInWithEmailPassword
     throw UnimplementedError();
   }
 
   @override
-  Future<Either<Failures, String>> signUpWithEmailPassword(
+  Future<Either<Failures, User>> signUpWithEmailPassword(
       {required String name,
       required String email,
       required String password}) async {
-    // TODO: implement signUpWithEmailPassword
     try {
-      final userId = await remoteDataSource.signUpWithEmailPassword(
+      final user = await remoteDataSource.signUpWithEmailPassword(
           name: name, email: email, password: password);
-      return right(userId);
+      return right(user);
     } on ServerException catch (e) {
       return left(Failures(e.message));
     }
