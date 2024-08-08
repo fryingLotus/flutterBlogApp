@@ -26,12 +26,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _currentUser = currentUser,
         _appUserCubit = appUserCubit,
         super(AuthInitial()) {
-    on<AuthEvent>((_, emit) => emit(AuthLoading()));
     on<AuthSignUp>(_onAuthSignUp);
     on<AuthLogin>(_onAuthLogin);
     on<AuthIsUserLoggedIn>(_isUserLoggedIn);
   }
   void _onAuthSignUp(AuthSignUp event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
     final response = await _userSignUp(UserSignUpParams(
         email: event.email, password: event.password, name: event.name));
     response.fold(
@@ -45,6 +45,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onAuthLogin(AuthLogin event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
     final response = await _userLogin(
         UserLoginParams(email: event.email, password: event.password));
     response.fold((failure) => emit(AuthFailure(failure.message)),
@@ -53,13 +54,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   void _isUserLoggedIn(
       AuthIsUserLoggedIn event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    print("Checking if user is logged in...");
     final res = await _currentUser(NoParams());
-    res.fold((failure) => AuthFailure(failure.message), (user) {
-      _emitAuthSuccess(user, emit);
-    });
+    res.fold(
+      (failure) {
+        print("Failed to get current user: ${failure.message}");
+        emit(AuthFailure(failure.message));
+      },
+      (user) {
+        print("User found: ${user.name}");
+        _emitAuthSuccess(user, emit);
+      },
+    );
   }
 
   void _emitAuthSuccess(User user, Emitter<AuthState> emit) {
+    print("User authenticated: ${user.name}");
     _appUserCubit.updateUser(user);
     emit(AuthSuccess(user));
   }
