@@ -8,7 +8,8 @@ class BlogModel extends Blog {
       required super.content,
       required super.imageUrl,
       required super.topics,
-      required super.updatedAt});
+      required super.updatedAt,
+      super.posterName});
 
   factory BlogModel.fromJson(Map<String, dynamic> map) {
     return BlogModel(
@@ -32,6 +33,7 @@ class BlogModel extends Blog {
     String? imageUrl,
     List<String>? topics,
     DateTime? updatedAt,
+    String? posterName,
   }) {
     return BlogModel(
       id: id ?? this.id,
@@ -41,6 +43,7 @@ class BlogModel extends Blog {
       imageUrl: imageUrl ?? this.imageUrl,
       topics: topics ?? this.topics,
       updatedAt: updatedAt ?? this.updatedAt,
+      posterName: posterName ?? this.posterName,
     );
   }
 
@@ -48,7 +51,8 @@ class BlogModel extends Blog {
     return <String, dynamic>{
       'id': id,
       'poster_id': posterId,
-      'title': content,
+      'title': title,
+      'content': content,
       'image_url': imageUrl,
       'topics': topics,
       'updated_at': updatedAt.toIso8601String()
