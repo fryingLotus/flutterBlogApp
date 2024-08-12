@@ -56,7 +56,14 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     final res = await _getAllBlogs(NoParams());
     res.fold(
       (l) => emit(BlogFailure(l.message)),
-      (r) => emit(BlogsDisplaySuccess(r)),
+      (r) {
+        // Print all fetched blogs for debugging
+        print('Fetched All Blogs:');
+        for (var blog in r) {
+          print('Blog ID: ${blog.id}, Title: ${blog.title}');
+        }
+        emit(BlogsDisplaySuccess(r));
+      },
     );
   }
 
@@ -65,7 +72,14 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     final res = await _getUserBlogs(NoParams());
     res.fold(
       (l) => emit(BlogFailure(l.message)),
-      (r) => emit(UserBlogsDisplaySuccess(r)),
+      (r) {
+        // Print all user-owned blogs for debugging
+        print('Fetched User Blogs:');
+        for (var blog in r) {
+          print('Blog ID: ${blog.id}, Title: ${blog.title}');
+        }
+        emit(UserBlogsDisplaySuccess(r));
+      },
     );
   }
 }

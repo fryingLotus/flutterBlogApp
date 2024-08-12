@@ -1,3 +1,4 @@
+import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/calculate_reading_time.dart';
 import 'package:blogapp/core/utils/format_date.dart';
@@ -46,7 +47,19 @@ class BlogViewerPage extends StatelessWidget {
                 ),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: Image.network(blog.imageUrl),
+                  child: Image.network(
+                    blog.imageUrl,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      } else {
+                        return const Loader();
+                      }
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.error);
+                    },
+                  ),
                 ),
                 const SizedBox(
                   height: 20,

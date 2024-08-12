@@ -21,53 +21,67 @@ class _BlogPageState extends State<BlogPage> {
   @override
   void initState() {
     super.initState();
+    _fetchBlogs();
+  }
+
+  Future<void> _fetchBlogs() async {
+    print('Fetching all blogs...');
     context.read<BlogBloc>().add(BlogFetchAllBlogs());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('D I B L O G'),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(context, AddNewBlogPage.route());
-            },
-            icon: const Icon(CupertinoIcons.add_circled),
-          )
-        ],
-      ),
-      body: BlocConsumer<BlogBloc, BlogState>(
-        listener: (context, state) {
-          if (state is BlogFailure) {
-            showSnackBar(context, state.error);
-          }
-        },
-        builder: (context, state) {
-          if (state is BlogLoading) {
-            return const Loader();
-          }
-          if (state is BlogsDisplaySuccess) {
-            return ListView.builder(
-              itemCount: state.blogs.length,
-              itemBuilder: (context, index) {
-                final blog = state.blogs[index];
-                return BlogCard(
-                  blog: blog,
-                  color: index % 2 == 0
-                      ? AppPallete.gradient1
-                      : AppPallete.gradient2,
-                );
+    return WillPopScope(
+      onWillPop: () async {
+        _fetchBlogs();
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text('D I B L O G'),
+          actions: [
+            IconButton(
+              onPressed: () {
+                Navigator.push(context, AddNewBlogPage.route());
               },
-            );
-          }
-          return const SizedBox
-              .shrink(); // Return an empty widget if no state matches
-        },
+              icon: const Icon(CupertinoIcons.add_circled),
+            )
+          ],
+        ),
+        body: BlocConsumer<BlogBloc, BlogState>(
+          listener: (context, state) {
+            if (state is BlogFailure) {
+              showSnackBar(context, state.error);
+            }
+          },
+          builder: (context, state) {
+            if (state is BlogLoading) {
+              return const Loader();
+            }
+            if (state is BlogsDisplaySuccess) {
+              return RefreshIndicator(
+                onRefresh: _fetchBlogs,
+                child: ListView.builder(
+                  itemCount: state.blogs.length,
+                  itemBuilder: (context, index) {
+                    final blog = state.blogs[index];
+                    return BlogCard(
+                      blog: blog,
+                      color: index % 2 == 0
+                          ? AppPallete.gradient1
+                          : AppPallete.gradient2,
+                    );
+                  },
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        drawer: const MyDrawer(),
       ),
-      drawer: const MyDrawer(),
     );
   }
 }
+

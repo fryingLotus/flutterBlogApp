@@ -22,6 +22,7 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
   @override
   void initState() {
     super.initState();
+    print('Fetching user blogs...');
     context.read<BlogBloc>().add(BlogFetchUserBlogs());
   }
 
@@ -51,6 +52,7 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
             return const Loader();
           }
           if (state is UserBlogsDisplaySuccess) {
+            print('User blogs loaded: ${state.userBlogs.length}');
             return ListView.builder(
               itemCount: state.userBlogs.length,
               itemBuilder: (context, index) {
@@ -68,6 +70,7 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
               .shrink(); // Return an empty widget if no state matches
         },
       ),
+      drawer: const MyDrawer(),
     );
   }
 }

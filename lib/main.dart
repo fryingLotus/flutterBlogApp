@@ -1,5 +1,6 @@
+import 'package:blogapp/core/common/cubits/app_theme/theme_cubit.dart';
+import 'package:blogapp/core/common/cubits/app_theme/theme_state.dart';
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
-import 'package:blogapp/core/themes/theme.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
@@ -15,6 +16,9 @@ void main() async {
     providers: [
       BlocProvider(
         create: (_) => serviceLocator<AppUserCubit>(),
+      ),
+      BlocProvider(
+        create: (_) => serviceLocator<ThemeCubit>(),
       ),
       BlocProvider(
         create: (_) => serviceLocator<AuthBloc>(),
@@ -35,7 +39,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // This widget is the root of your application.
   @override
   void initState() {
     super.initState();
@@ -44,21 +47,25 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkThemeMode,
-      home: BlocSelector<AppUserCubit, AppUserState, bool>(
-        selector: (state) {
-          return state is AppUserLoggedIn;
-        },
-        builder: (context, isLoggedIn) {
-          if (isLoggedIn) {
-            return const BlogPage();
-          }
-          return const LoginPage();
-        },
-      ),
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        return MaterialApp(
+          title: 'Flutter Demo',
+          debugShowCheckedModeBanner: false,
+          theme: themeState.themeData, // Use the theme from ThemeCubit
+          home: BlocSelector<AppUserCubit, AppUserState, bool>(
+            selector: (state) {
+              return state is AppUserLoggedIn;
+            },
+            builder: (context, isLoggedIn) {
+              if (isLoggedIn) {
+                return const BlogPage();
+              }
+              return const LoginPage();
+            },
+          ),
+        );
+      },
     );
   }
 }

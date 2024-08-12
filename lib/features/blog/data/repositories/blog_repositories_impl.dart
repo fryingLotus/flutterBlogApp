@@ -52,12 +52,12 @@ class BlogRepositoriesImpl implements BlogRepository {
   @override
   Future<Either<Failures, List<Blog>>> getAllBlogs() async {
     try {
-      if (!await (connectionChecker.isConnected)) {
-        final blogs = blogLocalDataSource.loadBlogs();
-        return right(blogs);
-      }
+      //if (!await (connectionChecker.isConnected)) {
+      //  final blogs = blogLocalDataSource.loadBlogs();
+      //  return right(blogs);
+      //}
       final blogs = await blogRemoteDataSource.getAllBlogs();
-      blogLocalDataSource.uploadLocalBlog(blogs: blogs);
+      //blogLocalDataSource.uploadLocalBlog(blogs: blogs);
       return right(blogs);
     } on ServerException catch (e) {
       return left(Failures(e.message));
@@ -67,12 +67,12 @@ class BlogRepositoriesImpl implements BlogRepository {
   @override
   Future<Either<Failures, List<Blog>>> getUserBlogs() async {
     try {
-      if (!await (connectionChecker.isConnected)) {
-        final blogs = blogLocalDataSource.loadBlogs();
-        return right(blogs);
-      }
+      //if (!await (connectionChecker.isConnected)) {
+      //  final blogs = blogLocalDataSource.loadBlogs();
+      //  return right(blogs);
+      //}
       final blogs = await blogRemoteDataSource.getUserBlogs();
-      blogLocalDataSource.uploadLocalBlog(blogs: blogs);
+      //blogLocalDataSource.uploadLocalBlog(blogs: blogs);
       return right(blogs);
     } on ServerException catch (e) {
       return left(Failures(e.message));

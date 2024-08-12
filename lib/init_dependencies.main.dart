@@ -14,6 +14,7 @@ Future<void> initDependencies() async {
   serviceLocator.registerLazySingleton(() => Hive.box(name: 'blogs'));
   // core
   serviceLocator.registerLazySingleton(() => AppUserCubit());
+  serviceLocator.registerLazySingleton(() => ThemeCubit());
   serviceLocator.registerFactory<ConnectionChecker>(
       () => ConnectionCheckerImpl(serviceLocator()));
 }
