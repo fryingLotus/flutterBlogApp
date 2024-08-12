@@ -9,19 +9,20 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class BlogPage extends StatefulWidget {
-  static route() => MaterialPageRoute(builder: (context) => const BlogPage());
-  const BlogPage({super.key});
+class BlogOwnedPage extends StatefulWidget {
+  static route() =>
+      MaterialPageRoute(builder: (context) => const BlogOwnedPage());
+  const BlogOwnedPage({super.key});
 
   @override
-  State<BlogPage> createState() => _BlogPageState();
+  State<BlogOwnedPage> createState() => _BlogOwnedPageState();
 }
 
-class _BlogPageState extends State<BlogPage> {
+class _BlogOwnedPageState extends State<BlogOwnedPage> {
   @override
   void initState() {
     super.initState();
-    context.read<BlogBloc>().add(BlogFetchAllBlogs());
+    context.read<BlogBloc>().add(BlogFetchUserBlogs());
   }
 
   @override
@@ -29,7 +30,7 @@ class _BlogPageState extends State<BlogPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('D I B L O G'),
+        title: const Text('My Blogs'),
         actions: [
           IconButton(
             onPressed: () {
@@ -49,11 +50,11 @@ class _BlogPageState extends State<BlogPage> {
           if (state is BlogLoading) {
             return const Loader();
           }
-          if (state is BlogsDisplaySuccess) {
+          if (state is UserBlogsDisplaySuccess) {
             return ListView.builder(
-              itemCount: state.blogs.length,
+              itemCount: state.userBlogs.length,
               itemBuilder: (context, index) {
-                final blog = state.blogs[index];
+                final blog = state.userBlogs[index];
                 return BlogCard(
                   blog: blog,
                   color: index % 2 == 0
@@ -67,7 +68,6 @@ class _BlogPageState extends State<BlogPage> {
               .shrink(); // Return an empty widget if no state matches
         },
       ),
-      drawer: const MyDrawer(),
     );
   }
 }

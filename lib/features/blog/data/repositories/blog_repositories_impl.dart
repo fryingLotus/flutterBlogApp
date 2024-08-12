@@ -63,4 +63,19 @@ class BlogRepositoriesImpl implements BlogRepository {
       return left(Failures(e.message));
     }
   }
+
+  @override
+  Future<Either<Failures, List<Blog>>> getUserBlogs() async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        final blogs = blogLocalDataSource.loadBlogs();
+        return right(blogs);
+      }
+      final blogs = await blogRemoteDataSource.getUserBlogs();
+      blogLocalDataSource.uploadLocalBlog(blogs: blogs);
+      return right(blogs);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    }
+  }
 }

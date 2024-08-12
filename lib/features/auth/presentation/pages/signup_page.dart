@@ -85,18 +85,27 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(
                     height: 15,
                   ),
-                  AuthField(
-                    hintText: 'Password',
-                    controller: _passwordController,
-                    obscureText: true,
-                  ),
-                  const SizedBox(
-                    height: 15,
-                  ),
-                  AuthField(
-                    hintText: 'Confirm Password',
-                    controller: _confirmPasswordController,
-                    obscureText: true,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: AuthField(
+                          hintText: 'Password',
+                          controller: _passwordController,
+                          obscureText: true,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Expanded(
+                        child: AuthField(
+                          hintText: 'Confirm Password',
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(
                     height: 20,
@@ -104,6 +113,11 @@ class _SignupPageState extends State<SignupPage> {
                   AuthGradientButton(
                     text: 'Sign Up',
                     onPressed: () {
+                      if (_passwordController.text.trim() !=
+                          _confirmPasswordController.text.trim()) {
+                        showSnackBar(context, 'Passwords do not match!');
+                        return; // Exit early if passwords do not match
+                      }
                       if (formKey.currentState!.validate()) {
                         context.read<AuthBloc>().add(AuthSignUp(
                             email: _emailController.text.trim(),

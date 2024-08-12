@@ -34,13 +34,14 @@ void _initAuth() {
     ..registerFactory(() => UserSignUp(serviceLocator()))
     ..registerFactory(() => UserLogin(serviceLocator()))
     ..registerFactory(() => CurrentUser(serviceLocator()))
+    ..registerFactory(() => UserLogout(serviceLocator()))
     // Bloc
     ..registerLazySingleton(() => AuthBloc(
-          userSignUp: serviceLocator(),
-          userLogin: serviceLocator(),
-          currentUser: serviceLocator(),
-          appUserCubit: serviceLocator(),
-        ));
+        userSignUp: serviceLocator(),
+        userLogin: serviceLocator(),
+        currentUser: serviceLocator(),
+        appUserCubit: serviceLocator(),
+        userLogout: serviceLocator()));
 }
 
 void _initBlog() {
@@ -72,7 +73,10 @@ void _initBlog() {
         serviceLocator(),
       ),
     )
+    ..registerFactory(() => GetUserBlogs(serviceLocator()))
     // Bloc
-    ..registerLazySingleton(() =>
-        BlogBloc(uploadBlog: serviceLocator(), getAllBlogs: serviceLocator()));
+    ..registerLazySingleton(() => BlogBloc(
+        uploadBlog: serviceLocator(),
+        getAllBlogs: serviceLocator(),
+        getUserBlogs: serviceLocator()));
 }

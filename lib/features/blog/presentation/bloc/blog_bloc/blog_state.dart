@@ -18,3 +18,8 @@ final class BlogsDisplaySuccess extends BlogState {
   final List<Blog> blogs;
   BlogsDisplaySuccess(this.blogs);
 }
+final class UserBlogsDisplaySuccess extends BlogState {
+  final List<Blog> userBlogs;
+
+  UserBlogsDisplaySuccess(this.userBlogs);
+}
