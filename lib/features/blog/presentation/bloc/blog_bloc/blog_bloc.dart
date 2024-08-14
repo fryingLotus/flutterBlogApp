@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/get_user_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/upload_blog.dart';
@@ -15,18 +16,22 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final UploadBlog _uploadBlog;
   final GetAllBlogs _getAllBlogs;
   final GetUserBlogs _getUserBlogs;
+  final DeleteBlog _deleteBlog;
   BlogBloc(
       {required UploadBlog uploadBlog,
       required GetAllBlogs getAllBlogs,
+      required DeleteBlog deleteBlog,
       required GetUserBlogs getUserBlogs})
       : _uploadBlog = uploadBlog,
         _getAllBlogs = getAllBlogs,
         _getUserBlogs = getUserBlogs,
+        _deleteBlog = deleteBlog,
         super(BlogInitial()) {
     on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
     on<BlogFetchAllBlogs>(_onFetchAllBlog);
     on<BlogFetchUserBlogs>(_onFetchUserBlog);
+    on<BlogDelete>(_onDeleteBlog);
   }
   void _onBlogUpload(
     BlogUpload event,
@@ -79,6 +84,22 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
           print('Blog ID: ${blog.id}, Title: ${blog.title}');
         }
         emit(UserBlogsDisplaySuccess(r));
+      },
+    );
+  }
+
+  void _onDeleteBlog(BlogDelete event, Emitter<BlogState> emit) async {
+    print('Deleting blog with ID: ${event.blogId}');
+
+    final res = await _deleteBlog(DeleteBlogParams(blogId: event.blogId));
+    res.fold(
+      (l) {
+        print('Delete failed: ${l.message}');
+        emit(BlogFailure(l.message));
+      },
+      (r) {
+        print('Blog deleted successfully.');
+        emit(BlogDeleteSuccess());
       },
     );
   }

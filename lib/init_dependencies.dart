@@ -14,6 +14,7 @@ import 'package:blogapp/features/blog/data/datasources/blog_local_data_source.da
 import 'package:blogapp/features/blog/data/datasources/blog_remote_data_source.dart';
 import 'package:blogapp/features/blog/data/repositories/blog_repositories_impl.dart';
 import 'package:blogapp/features/blog/domain/repositories/blog_repository.dart';
+import 'package:blogapp/features/blog/domain/usecases/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/get_user_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/upload_blog.dart';
