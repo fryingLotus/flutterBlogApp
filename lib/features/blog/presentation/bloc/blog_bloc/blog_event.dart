@@ -23,17 +23,20 @@ final class BlogUpdate extends BlogEvent {
   final String posterId;
   final String title;
   final String content;
-  final File image;
+  final File? image; // Make image optional
   final List<String> topics;
   final String blogId;
+  final String? currentImageUrl; // Optional current image URL
 
-  BlogUpdate(
-      {required this.posterId,
-      required this.title,
-      required this.content,
-      required this.image,
-      required this.topics,
-      required this.blogId});
+  BlogUpdate({
+    required this.posterId,
+    required this.title,
+    required this.content,
+    this.image, // Make optional
+    required this.topics,
+    required this.blogId,
+    this.currentImageUrl, // Add optional current image URL
+  });
 }
 
 final class BlogFetchAllBlogs extends BlogEvent {}

@@ -110,22 +110,35 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   }
 
   void _onUpdateBlog(BlogUpdate event, Emitter<BlogState> emit) async {
+    // Log the incoming event details
+    print('Updating blog: ${event.blogId}');
+    print('Poster ID: ${event.posterId}');
+    print('Title: ${event.title}');
+    print('Content: ${event.content}');
+    print('Topics: ${event.topics}');
+
+    // Call the update blog method
     final res = await _updateBlog(
       UpdateBlogParams(
         posterId: event.posterId,
         blogId: event.blogId,
         title: event.title,
         content: event.content,
-        image: event.image,
+        image: event.image, // Pass the image
         topics: event.topics,
+        currentImageUrl: event.currentImageUrl, // Pass the current image URL
       ),
     );
 
+    // Log the result of the update operation
     res.fold(
       (l) {
+        print('Update failed: ${l.message}'); // Log failure message
         emit(BlogFailure(l.message));
       },
       (r) {
+        print(
+            'Update successful: ${r.id}'); // Log success message (or any other relevant info)
         emit(BlogUpdateSuccess());
       },
     );

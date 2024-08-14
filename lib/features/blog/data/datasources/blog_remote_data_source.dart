@@ -34,11 +34,14 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   }
 
   @override
-  Future<String> uploadBlogImage(
-      {required File image, required BlogModel blog}) async {
+  Future<String> uploadBlogImage({
+    required File image,
+    required BlogModel blog,
+  }) async {
     try {
-      await supabaseClient.storage.from('blogs_image').upload(blog.id, image);
-      return supabaseClient.storage.from('blogs_image').getPublicUrl(blog.id);
+      final uniqueId = '${blog.id}_${DateTime.now().millisecondsSinceEpoch}';
+      await supabaseClient.storage.from('blogs_image').upload(uniqueId, image);
+      return supabaseClient.storage.from('blogs_image').getPublicUrl(uniqueId);
     } on StorageException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

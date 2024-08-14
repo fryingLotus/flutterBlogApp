@@ -94,11 +94,12 @@ class BlogRepositoriesImpl implements BlogRepository {
   @override
   Future<Either<Failures, Blog>> updateBlog({
     required String blogId,
-    required File image,
+    File? image,
     required String title,
     required String content,
     required String posterId,
     required List<String> topics,
+    String? currentImageUrl,
   }) async {
     try {
       if (!await connectionChecker.isConnected) {
@@ -110,21 +111,25 @@ class BlogRepositoriesImpl implements BlogRepository {
         posterId: posterId,
         title: title,
         content: content,
-        imageUrl: '',
+        imageUrl: currentImageUrl ?? '',
         topics: topics,
         updatedAt: DateTime.now(),
       );
 
-      final imageUrl = await blogRemoteDataSource.uploadBlogImage(
-        image: image,
-        blog: updatedBlog,
-      );
-
-      updatedBlog = updatedBlog.copyWith(imageUrl: imageUrl);
+      // If an image is provided, upload it and get the new URL
+      if (image != null) {
+        final imageUrl = await blogRemoteDataSource.uploadBlogImage(
+          image: image,
+          blog: updatedBlog,
+        );
+        updatedBlog = updatedBlog.copyWith(imageUrl: imageUrl);
+      } else if (currentImageUrl != null) {
+        // If no new image is provided, keep the current URL
+        updatedBlog = updatedBlog.copyWith(imageUrl: currentImageUrl);
+      }
 
       final updatedBlogModel =
           await blogRemoteDataSource.updateBlog(updatedBlog);
-
       return right(updatedBlogModel);
     } on ServerException catch (e) {
       return left(Failures(e.message));

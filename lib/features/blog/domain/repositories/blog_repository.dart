@@ -13,16 +13,16 @@ abstract interface class BlogRepository {
     required List<String> topics,
   });
   Future<Either<Failures, List<Blog>>> getAllBlogs();
-
   Future<Either<Failures, List<Blog>>> getUserBlogs();
-
   Future<Either<Failures, bool>> deleteBlog(String blogId);
+
   Future<Either<Failures, Blog>> updateBlog({
     required String blogId,
-    required File image,
+    File? image,
     required String title,
     required String content,
     required String posterId,
     required List<String> topics,
+    String? currentImageUrl,
   });
 }

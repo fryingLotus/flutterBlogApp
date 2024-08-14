@@ -109,6 +109,9 @@ class BlogViewerPage extends StatelessWidget {
                         errorBuilder: (context, error, stackTrace) {
                           return const Icon(Icons.error);
                         },
+                        fit: BoxFit.contain,
+                        width: double.infinity,
+                        height: 200,
                       ),
                     ),
                     const SizedBox(height: 20),

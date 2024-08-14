@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
@@ -39,8 +38,8 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
       titleController.text = widget.blog!.title;
       contentController.text = widget.blog!.content;
       selectedTopics = widget.blog!.topics;
-
-      image = File(widget.blog!.imageUrl);
+      // Reset the image to null for editing, keeping the current URL intact
+      image = null;
     }
   }
 
@@ -63,22 +62,28 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
       if (widget.blog != null) {
         // Editing an existing blog
         context.read<BlogBloc>().add(BlogUpdate(
-              blogId: widget.blog!.id,
               posterId: posterId,
+              blogId: widget.blog!.id,
               title: titleController.text.trim(),
               content: contentController.text.trim(),
-              image: image ?? File(widget.blog!.imageUrl),
+              image: image, // This can be null if no new image
+              currentImageUrl: widget.blog!.imageUrl, // Pass the existing URL
               topics: selectedTopics,
             ));
+        print('Updating blog: ${widget.blog!.id}'); // Debug log
       } else {
+        // Uploading a new blog
         context.read<BlogBloc>().add(BlogUpload(
               posterId: posterId,
               title: titleController.text.trim(),
               content: contentController.text.trim(),
-              image: image!,
+              image: image!, // Use the local image file
               topics: selectedTopics,
             ));
+        print('Uploading new blog'); // Debug log
       }
+    } else {
+      print('Validation failed or no image provided'); // Debug log
     }
   }
 
@@ -179,9 +184,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
                               ),
                             ),
                           ),
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
@@ -221,14 +224,10 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
                             .toList(),
                       ),
                     ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
                     BlogEditor(
                         controller: titleController, hintText: 'Blog Title'),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 10),
                     BlogEditor(
                         controller: contentController,
                         hintText: 'Blog Content...'),
@@ -242,3 +241,4 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
     );
   }
 }
+
