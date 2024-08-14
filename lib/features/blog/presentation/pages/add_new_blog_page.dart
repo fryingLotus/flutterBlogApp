@@ -14,10 +14,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AddNewBlogPage extends StatefulWidget {
+  final Blog? blog;
+
   static route({Blog? blog}) =>
       MaterialPageRoute(builder: (context) => AddNewBlogPage(blog: blog));
-
-  final Blog? blog;
 
   const AddNewBlogPage({super.key, this.blog});
 
@@ -39,8 +39,8 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
       titleController.text = widget.blog!.title;
       contentController.text = widget.blog!.content;
       selectedTopics = widget.blog!.topics;
-      // Assume you have a way to get the file from the URL for editing
-      // image = File(widget.blog!.imageUrl);
+
+      image = File(widget.blog!.imageUrl);
     }
   }
 
@@ -67,12 +67,10 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
               posterId: posterId,
               title: titleController.text.trim(),
               content: contentController.text.trim(),
-              image:
-                  image ?? File(widget.blog!.imageUrl), // Handle existing image
+              image: image ?? File(widget.blog!.imageUrl),
               topics: selectedTopics,
             ));
       } else {
-        // Creating a new blog
         context.read<BlogBloc>().add(BlogUpload(
               posterId: posterId,
               title: titleController.text.trim(),

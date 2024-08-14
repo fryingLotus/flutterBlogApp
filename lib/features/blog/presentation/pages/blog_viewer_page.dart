@@ -19,6 +19,8 @@ class BlogViewerPage extends StatelessWidget {
   const BlogViewerPage({super.key, required this.blog});
 
   void _editBlog(BuildContext context) {
+    print('Edit!');
+    Navigator.pop(context);
     Navigator.push(
       context,
       AddNewBlogPage.route(blog: blog),
@@ -70,6 +72,15 @@ class BlogViewerPage extends StatelessWidget {
                           onEditTap: () => _editBlog(context),
                           onDeleteTap: () => _deleteBlog(context),
                         ),
+                        GestureDetector(
+                          child: Icon(Icons.edit),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              AddNewBlogPage.route(blog: blog),
+                            );
+                          },
+                        )
                       ],
                     ),
                     const SizedBox(height: 20),
