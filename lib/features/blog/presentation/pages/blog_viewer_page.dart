@@ -4,7 +4,7 @@ import 'package:blogapp/core/utils/calculate_reading_time.dart';
 import 'package:blogapp/core/utils/format_date.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
-import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
+import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,9 +18,11 @@ class BlogViewerPage extends StatelessWidget {
 
   const BlogViewerPage({super.key, required this.blog});
 
-  void _editBlog() {
-    // Add your edit blog logic here
-    print('Edit blog');
+  void _editBlog(BuildContext context) {
+    Navigator.push(
+      context,
+      AddNewBlogPage.route(blog: blog),
+    );
   }
 
   void _deleteBlog(BuildContext context) {
@@ -36,15 +38,13 @@ class BlogViewerPage extends StatelessWidget {
       body: BlocConsumer<BlogBloc, BlogState>(
         listener: (context, state) {
           if (state is BlogFailure) {
-            // Handle the error state, e.g., show a snackbar
             ScaffoldMessenger.of(context)
                 .showSnackBar(SnackBar(content: Text(state.error)));
           } else if (state is BlogDeleteSuccess) {
-            // On successful deletion, navigate back or refresh the blog list
-            Navigator.pop(context); // Go back to the previous screen
-            context
-                .read<BlogBloc>()
-                .add(BlogFetchAllBlogs()); // Optionally fetch all blogs again
+            Navigator.pop(context);
+            context.read<BlogBloc>().add(BlogFetchAllBlogs());
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Succesfully deleting blog')));
           }
         },
         builder: (context, state) {
@@ -67,7 +67,7 @@ class BlogViewerPage extends StatelessWidget {
                               fontSize: 24, fontWeight: FontWeight.bold),
                         ),
                         BlogButton(
-                          onEditTap: _editBlog,
+                          onEditTap: () => _editBlog(context),
                           onDeleteTap: () => _deleteBlog(context),
                         ),
                       ],
@@ -115,4 +115,3 @@ class BlogViewerPage extends StatelessWidget {
     );
   }
 }
-

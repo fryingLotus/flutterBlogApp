@@ -5,6 +5,7 @@ import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/get_user_blogs.dart';
+import 'package:blogapp/features/blog/domain/usecases/update_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/upload_blog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,21 +18,25 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final GetAllBlogs _getAllBlogs;
   final GetUserBlogs _getUserBlogs;
   final DeleteBlog _deleteBlog;
-  BlogBloc(
-      {required UploadBlog uploadBlog,
-      required GetAllBlogs getAllBlogs,
-      required DeleteBlog deleteBlog,
-      required GetUserBlogs getUserBlogs})
-      : _uploadBlog = uploadBlog,
+  final UpdateBlog _updateBlog;
+  BlogBloc({
+    required UploadBlog uploadBlog,
+    required GetAllBlogs getAllBlogs,
+    required DeleteBlog deleteBlog,
+    required GetUserBlogs getUserBlogs,
+    required UpdateBlog updateBlog,
+  })  : _uploadBlog = uploadBlog,
         _getAllBlogs = getAllBlogs,
         _getUserBlogs = getUserBlogs,
         _deleteBlog = deleteBlog,
+        _updateBlog = updateBlog,
         super(BlogInitial()) {
     on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
     on<BlogFetchAllBlogs>(_onFetchAllBlog);
     on<BlogFetchUserBlogs>(_onFetchUserBlog);
     on<BlogDelete>(_onDeleteBlog);
+    on<BlogUpdate>(_onUpdateBlog);
   }
   void _onBlogUpload(
     BlogUpload event,
@@ -100,6 +105,28 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
       (r) {
         print('Blog deleted successfully.');
         emit(BlogDeleteSuccess());
+      },
+    );
+  }
+
+  void _onUpdateBlog(BlogUpdate event, Emitter<BlogState> emit) async {
+    final res = await _updateBlog(
+      UpdateBlogParams(
+        posterId: event.posterId,
+        blogId: event.blogId,
+        title: event.title,
+        content: event.content,
+        image: event.image,
+        topics: event.topics,
+      ),
+    );
+
+    res.fold(
+      (l) {
+        emit(BlogFailure(l.message));
+      },
+      (r) {
+        emit(BlogUpdateSuccess());
       },
     );
   }

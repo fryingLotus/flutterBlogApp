@@ -84,4 +84,3 @@ class _BlogPageState extends State<BlogPage> {
     );
   }
 }
-

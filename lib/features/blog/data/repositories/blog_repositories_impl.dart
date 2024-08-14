@@ -90,4 +90,46 @@ class BlogRepositoriesImpl implements BlogRepository {
       return left(Failures('An unknown error occurred.'));
     }
   }
+
+  @override
+  Future<Either<Failures, Blog>> updateBlog({
+    required String blogId,
+    required File image,
+    required String title,
+    required String content,
+    required String posterId,
+    required List<String> topics,
+  }) async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        return left(Failures('No Internet Connection!'));
+      }
+
+      BlogModel updatedBlog = BlogModel(
+        id: blogId,
+        posterId: posterId,
+        title: title,
+        content: content,
+        imageUrl: '',
+        topics: topics,
+        updatedAt: DateTime.now(),
+      );
+
+      final imageUrl = await blogRemoteDataSource.uploadBlogImage(
+        image: image,
+        blog: updatedBlog,
+      );
+
+      updatedBlog = updatedBlog.copyWith(imageUrl: imageUrl);
+
+      final updatedBlogModel =
+          await blogRemoteDataSource.updateBlog(updatedBlog);
+
+      return right(updatedBlogModel);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures('An unknown error occurred.'));
+    }
+  }
 }

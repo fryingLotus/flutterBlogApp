@@ -5,6 +5,7 @@ import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/pick_image.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
+import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_editor.dart';
@@ -13,9 +14,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AddNewBlogPage extends StatefulWidget {
-  static route() =>
-      MaterialPageRoute(builder: (context) => const AddNewBlogPage());
-  const AddNewBlogPage({super.key});
+  static route({Blog? blog}) =>
+      MaterialPageRoute(builder: (context) => AddNewBlogPage(blog: blog));
+
+  final Blog? blog;
+
+  const AddNewBlogPage({super.key, this.blog});
 
   @override
   State<AddNewBlogPage> createState() => _AddNewBlogPageState();
@@ -28,6 +32,18 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
   File? image;
   final formkey = GlobalKey<FormState>();
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.blog != null) {
+      titleController.text = widget.blog!.title;
+      contentController.text = widget.blog!.content;
+      selectedTopics = widget.blog!.topics;
+      // Assume you have a way to get the file from the URL for editing
+      // image = File(widget.blog!.imageUrl);
+    }
+  }
+
   void selectImage() async {
     final pickedImage = await pickImage();
     if (pickedImage != null) {
@@ -37,18 +53,34 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
     }
   }
 
-  void uploadBlog() {
+  void uploadOrEditBlog() {
     if (formkey.currentState!.validate() &&
         selectedTopics.isNotEmpty &&
-        image != null) {
+        (image != null || widget.blog != null)) {
       final posterId =
           (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
-      context.read<BlogBloc>().add(BlogUpload(
-          posterId: posterId,
-          title: titleController.text.trim(),
-          content: contentController.text.trim(),
-          image: image!,
-          topics: selectedTopics));
+
+      if (widget.blog != null) {
+        // Editing an existing blog
+        context.read<BlogBloc>().add(BlogUpdate(
+              blogId: widget.blog!.id,
+              posterId: posterId,
+              title: titleController.text.trim(),
+              content: contentController.text.trim(),
+              image:
+                  image ?? File(widget.blog!.imageUrl), // Handle existing image
+              topics: selectedTopics,
+            ));
+      } else {
+        // Creating a new blog
+        context.read<BlogBloc>().add(BlogUpload(
+              posterId: posterId,
+              title: titleController.text.trim(),
+              content: contentController.text.trim(),
+              image: image!,
+              topics: selectedTopics,
+            ));
+      }
     }
   }
 
@@ -70,7 +102,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
             actions: [
               IconButton(
                 onPressed: () {
-                  uploadBlog();
+                  uploadOrEditBlog();
                 },
                 icon: const Icon(Icons.done_rounded),
               ),
@@ -83,7 +115,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
         listener: (context, state) {
           if (state is BlogFailure) {
             showSnackBar(context, state.error);
-          } else if (state is BlogUploadSuccess) {
+          } else if (state is BlogUploadSuccess || state is BlogUpdateSuccess) {
             Navigator.pushAndRemoveUntil(
                 context, BlogPage.route(), (route) => false);
           }
@@ -99,7 +131,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
                 key: formkey,
                 child: Column(
                   children: [
-                    image != null
+                    image != null || widget.blog != null
                         ? GestureDetector(
                             onTap: () => selectImage(),
                             child: SizedBox(
@@ -107,10 +139,15 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
                               height: 150,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: Image.file(
-                                  image!,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: image != null
+                                    ? Image.file(
+                                        image!,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.network(
+                                        widget.blog!.imageUrl,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                           )
