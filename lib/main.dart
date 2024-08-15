@@ -4,6 +4,7 @@ import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
+import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
 import 'package:blogapp/init_dependencies.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,9 @@ void main() async {
       ),
       BlocProvider(
         create: (_) => serviceLocator<BlogBloc>(),
+      ),
+      BlocProvider(
+        create: (_) => serviceLocator<CommentBloc>(),
       ),
     ],
     child: const MyApp(),
@@ -50,7 +54,7 @@ class _MyAppState extends State<MyApp> {
     return BlocBuilder<ThemeCubit, ThemeState>(
       builder: (context, themeState) {
         return MaterialApp(
-          title: 'Flutter Demo',
+          title: 'DIBLOG',
           debugShowCheckedModeBanner: false,
           theme: themeState.themeData, // Use the theme from ThemeCubit
           home: BlocSelector<AppUserCubit, AppUserState, bool>(

@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
-import 'package:blogapp/features/blog/domain/usecases/delete_blog.dart';
-import 'package:blogapp/features/blog/domain/usecases/get_all_blogs.dart';
-import 'package:blogapp/features/blog/domain/usecases/get_user_blogs.dart';
-import 'package:blogapp/features/blog/domain/usecases/update_blog.dart';
-import 'package:blogapp/features/blog/domain/usecases/upload_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/update_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/upload_blog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

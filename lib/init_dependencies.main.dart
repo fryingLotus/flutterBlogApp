@@ -5,6 +5,7 @@ final serviceLocator = GetIt.instance;
 Future<void> initDependencies() async {
   _initAuth();
   _initBlog();
+  _initComment();
   final supabase = await Supabase.initialize(
       url: AppSecrets.supabaseUrl, anonKey: AppSecrets.supabaseAnonKey);
 
@@ -84,4 +85,24 @@ void _initBlog() {
         getUserBlogs: serviceLocator(),
         deleteBlog: serviceLocator(),
         updateBlog: serviceLocator()));
+}
+
+void _initComment() {
+  // Datasource
+  serviceLocator
+    ..registerFactory<CommentRemoteDataSource>(
+      () => CommentRemoteDataSourceImpl(serviceLocator()),
+    )
+    // Repository
+    ..registerFactory<CommentRepository>(
+      () => CommentRepositoryImpl(serviceLocator(), serviceLocator()),
+    )
+    // Usecases
+    ..registerFactory(
+      () => UploadComment(
+        serviceLocator(),
+      ),
+    )
+    // Bloc
+    ..registerLazySingleton(() => CommentBloc(uploadComment: serviceLocator()));
 }

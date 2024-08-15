@@ -18,12 +18,10 @@ class CommentModel extends Comment {
       posterId: map['poster_id'] as String,
       blogId: map['blog_id'] as String,
       content: map['content'] as String,
-      posterAvatar: map['poster_avatar'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: map['updated_at'] == null
           ? DateTime.now()
           : DateTime.parse(map['updated_at']),
-      posterName: map['poster_name'] as String?,
     );
   }
 
@@ -55,10 +53,8 @@ class CommentModel extends Comment {
       'poster_id': posterId,
       'blog_id': blogId,
       'content': content,
-      'image_url': imageUrl,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
-      'poster_name': posterName,
     };
   }
 }
