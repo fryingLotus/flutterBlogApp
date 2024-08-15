@@ -34,9 +34,13 @@ class CommentRemoteDataSourceImpl implements CommentRemoteDataSource {
     try {
       final comments = await supabaseClient
           .from('comments')
-          .select('*')
+          .select('*,profiles (name,avatar_url)')
           .eq('blog_id', blogId);
-      return comments.map((comment) => CommentModel.fromJson(comment)).toList();
+      return comments
+          .map((comment) => CommentModel.fromJson(comment).copyWith(
+              posterName: comment['profiles']['name'],
+              posterAvatar: comment['profiles']['avatar_url']))
+          .toList();
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

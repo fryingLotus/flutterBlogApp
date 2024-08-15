@@ -103,6 +103,12 @@ void _initComment() {
         serviceLocator(),
       ),
     )
+    ..registerFactory(
+      () => GetCommentsForBlog(serviceLocator()),
+    )
     // Bloc
-    ..registerLazySingleton(() => CommentBloc(uploadComment: serviceLocator()));
+    ..registerLazySingleton(() => CommentBloc(
+          uploadComment: serviceLocator(),
+          getCommentsForBlog: serviceLocator(),
+        ));
 }

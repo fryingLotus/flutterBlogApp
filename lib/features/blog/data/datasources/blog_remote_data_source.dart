@@ -55,8 +55,9 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
       final blogs =
           await supabaseClient.from('blogs').select('*,profiles (name)');
       return blogs
-          .map((blog) => BlogModel.fromJson(blog)
-              .copyWith(posterName: blog['profiles']['name']))
+          .map((blog) => BlogModel.fromJson(blog).copyWith(
+                posterName: blog['profiles']['name'],
+              ))
           .toList();
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
@@ -103,6 +104,12 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
           .update(blog.toJson())
           .eq('id', blog.id)
           .select();
+
+      // Check if blogData is empty before accessing it
+      if (blogData.isEmpty) {
+        throw Exception('No blog data returned after update.');
+      }
+
       return BlogModel.fromJson(blogData.first);
     } on PostgrestException catch (e) {
       throw ServerException(e.message);

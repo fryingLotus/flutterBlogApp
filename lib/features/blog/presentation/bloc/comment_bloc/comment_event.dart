@@ -8,5 +8,12 @@ final class CommentUpload extends CommentEvent {
   final String content;
   final String blogId;
 
-  CommentUpload({required this.posterId, required this.content, required this.blogId});
+  CommentUpload(
+      {required this.posterId, required this.content, required this.blogId});
+}
+
+final class CommentFetchAllForBlog extends CommentEvent {
+  final String blogId;
+
+  CommentFetchAllForBlog({required this.blogId});
 }

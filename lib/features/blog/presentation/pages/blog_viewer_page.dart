@@ -1,4 +1,3 @@
-import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/calculate_reading_time.dart';
@@ -9,11 +8,11 @@ import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart
 import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_button.dart';
-import 'package:blogapp/features/blog/presentation/widgets/blog_editor.dart';
+import 'package:blogapp/features/blog/presentation/widgets/comment_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class BlogViewerPage extends StatefulWidget {
+class BlogViewerPage extends StatelessWidget {
   static route(Blog blog) => MaterialPageRoute(
         builder: (context) => BlogViewerPage(blog: blog),
       );
@@ -22,40 +21,16 @@ class BlogViewerPage extends StatefulWidget {
 
   const BlogViewerPage({super.key, required this.blog});
 
-  @override
-  State<BlogViewerPage> createState() => _BlogViewerPageState();
-}
-
-class _BlogViewerPageState extends State<BlogViewerPage> {
-  final TextEditingController contentController = TextEditingController();
-  final formKey = GlobalKey<FormState>();
-
   void _editBlog(BuildContext context) {
     Navigator.pop(context);
     Navigator.push(
       context,
-      AddNewBlogPage.route(blog: widget.blog),
+      AddNewBlogPage.route(blog: blog),
     );
   }
 
   void _deleteBlog(BuildContext context) {
-    context.read<BlogBloc>().add(BlogDelete(blogId: widget.blog.id));
-  }
-
-  void _uploadComment(BuildContext context) {
-    final posterId =
-        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
-    context.read<CommentBloc>().add(CommentUpload(
-        posterId: posterId,
-        blogId: widget.blog.id,
-        content: contentController.text.trim()));
-    contentController.clear(); // Clear the text field after uploading
-  }
-
-  @override
-  void dispose() {
-    contentController.dispose();
-    super.dispose();
+    context.read<BlogBloc>().add(BlogDelete(blogId: blog.id));
   }
 
   @override
@@ -101,7 +76,7 @@ class _BlogViewerPageState extends State<BlogViewerPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            widget.blog.title,
+                            blog.title,
                             style: const TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold),
                           ),
@@ -114,7 +89,7 @@ class _BlogViewerPageState extends State<BlogViewerPage> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                AddNewBlogPage.route(blog: widget.blog),
+                                AddNewBlogPage.route(blog: blog),
                               );
                             },
                           ),
@@ -122,12 +97,12 @@ class _BlogViewerPageState extends State<BlogViewerPage> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        'By ${widget.blog.posterName}',
+                        'By ${blog.posterName}',
                         style: const TextStyle(
                             fontWeight: FontWeight.w500, fontSize: 16.0),
                       ),
                       Text(
-                        '${formatDateBydMMMYYYY(widget.blog.updatedAt)} . ${calculateReadingTime(widget.blog.content)} mins',
+                        '${formatDateBydMMMYYYY(blog.updatedAt)} . ${calculateReadingTime(blog.content)} mins',
                         style: const TextStyle(
                             color: AppPallete.greyColor, fontSize: 16),
                       ),
@@ -135,7 +110,7 @@ class _BlogViewerPageState extends State<BlogViewerPage> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
                         child: Image.network(
-                          widget.blog.imageUrl,
+                          blog.imageUrl,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) {
                               return child;
@@ -153,31 +128,21 @@ class _BlogViewerPageState extends State<BlogViewerPage> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        widget.blog.content,
+                        blog.content,
                         style: const TextStyle(fontSize: 16.0, height: 2),
                       ),
                       const SizedBox(height: 40),
-                      Form(
-                        key: formKey,
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: BlogEditor(
-                                controller: contentController,
-                                hintText: 'Comment',
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.send),
-                              onPressed: () {
-                                if (formKey.currentState?.validate() ?? false) {
-                                  _uploadComment(context);
-                                }
-                              },
-                            ),
-                          ],
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10.0),
+                        child: Text(
+                          "Comment Section",
+                          style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold,
+                              color: AppPallete.gradient2),
                         ),
-                      )
+                      ),
+                      CommentSection(blogId: blog.id)
                     ],
                   ),
                 ),

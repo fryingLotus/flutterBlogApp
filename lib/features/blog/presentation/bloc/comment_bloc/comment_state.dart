@@ -4,7 +4,8 @@ part of 'comment_bloc.dart';
 sealed class CommentState {}
 
 final class CommentInitial extends CommentState {}
-final class CommentLoading extends CommentState{}
+
+final class CommentLoading extends CommentState {}
 
 final class CommentFailure extends CommentState {
   final String error;
@@ -12,3 +13,9 @@ final class CommentFailure extends CommentState {
 }
 
 final class CommentUploadSuccess extends CommentState {}
+
+final class CommentsDisplaySuccess extends CommentState {
+  final List<Comment> comments;
+
+  CommentsDisplaySuccess({required this.comments});
+}

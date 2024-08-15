@@ -9,7 +9,8 @@ abstract interface class CommentRepository {
     required String content,
   });
 
-  Future<Either<Failures, List<Comment>>> getCommentsForBlog(String blogId);
+  Future<Either<Failures, List<Comment>>> getCommentsForBlog(
+      {required String blogId});
 
   Future<Either<Failures, bool>> deleteComment(String commentId);
 
