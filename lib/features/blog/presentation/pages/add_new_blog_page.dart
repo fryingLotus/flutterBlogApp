@@ -38,7 +38,6 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
       titleController.text = widget.blog!.title;
       contentController.text = widget.blog!.content;
       selectedTopics = widget.blog!.topics;
-      // Reset the image to null for editing, keeping the current URL intact
       image = null;
     }
   }
@@ -66,7 +65,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
               blogId: widget.blog!.id,
               title: titleController.text.trim(),
               content: contentController.text.trim(),
-              image: image, // This can be null if no new image
+              image: image,
               currentImageUrl: widget.blog!.imageUrl, // Pass the existing URL
               topics: selectedTopics,
             ));
@@ -117,10 +116,12 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
       body: BlocConsumer<BlogBloc, BlogState>(
         listener: (context, state) {
           if (state is BlogFailure) {
-            showSnackBar(context, state.error);
+            showSnackBar(context, state.error, isError: true);
           } else if (state is BlogUploadSuccess || state is BlogUpdateSuccess) {
             Navigator.pushAndRemoveUntil(
                 context, BlogPage.route(), (route) => false);
+            showSnackBar(context,
+                'Your blog "${titleController.text}" has been added succesfully');
           }
         },
         builder: (context, state) {
@@ -241,4 +242,3 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
     );
   }
 }
-

@@ -1,13 +1,13 @@
+import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/calculate_reading_time.dart';
 import 'package:blogapp/core/utils/format_date.dart';
+import 'package:blogapp/core/utils/show_options.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
-import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
-import 'package:blogapp/features/blog/presentation/widgets/blog_button.dart';
 import 'package:blogapp/features/blog/presentation/widgets/comment_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,6 +35,9 @@ class BlogViewerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String posterId =
+        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+
     return Scaffold(
       appBar: AppBar(),
       body: MultiBlocListener(
@@ -42,20 +45,11 @@ class BlogViewerPage extends StatelessWidget {
           BlocListener<BlogBloc, BlogState>(
             listener: (context, state) {
               if (state is BlogFailure) {
-                showSnackBar(context, state.error);
+                showSnackBar(context, state.error, isError: true);
               } else if (state is BlogDeleteSuccess) {
                 Navigator.pop(context);
                 context.read<BlogBloc>().add(BlogFetchAllBlogs());
                 showSnackBar(context, 'Successfully deleted blog');
-              }
-            },
-          ),
-          BlocListener<CommentBloc, CommentState>(
-            listener: (context, state) {
-              if (state is CommentFailure) {
-                showSnackBar(context, state.error);
-              } else if (state is CommentUploadSuccess) {
-                showSnackBar(context, 'Comment posted successfully');
               }
             },
           ),
@@ -80,18 +74,13 @@ class BlogViewerPage extends StatelessWidget {
                             style: const TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold),
                           ),
-                          BlogButton(
-                            onEditTap: () => _editBlog(context),
-                            onDeleteTap: () => _deleteBlog(context),
-                          ),
                           GestureDetector(
-                            child: const Icon(Icons.edit),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                AddNewBlogPage.route(blog: blog),
-                              );
-                            },
+                            child: const Icon(Icons.more_vert),
+                            onTap: () => showOptions(
+                              context: context,
+                              onEdit: () => _editBlog(context),
+                              onDelete: () => _deleteBlog(context),
+                            ),
                           ),
                         ],
                       ),
@@ -142,7 +131,7 @@ class BlogViewerPage extends StatelessWidget {
                               color: AppPallete.gradient2),
                         ),
                       ),
-                      CommentSection(blogId: blog.id)
+                      CommentSection(blogId: blog.id),
                     ],
                   ),
                 ),

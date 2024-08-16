@@ -44,7 +44,7 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
       body: BlocConsumer<BlogBloc, BlogState>(
         listener: (context, state) {
           if (state is BlogFailure) {
-            showSnackBar(context, state.error);
+            showSnackBar(context, state.error, isError: true);
           }
         },
         builder: (context, state) {

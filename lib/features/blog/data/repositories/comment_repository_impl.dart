@@ -14,9 +14,13 @@ class CommentRepositoryImpl implements CommentRepository {
 
   CommentRepositoryImpl(this.commentRemoteDataSource, this.connectionChecker);
   @override
-  Future<Either<Failures, bool>> deleteComment(String commentId) {
-    // TODO: implement deleteComment
-    throw UnimplementedError();
+  Future<Either<Failures, bool>> deleteComment(String commentId) async {
+    try {
+      await commentRemoteDataSource.deleteComment(commentId);
+      return right(true);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    }
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/format_date.dart';
+import 'package:blogapp/core/utils/show_options.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_editor.dart';
@@ -49,117 +50,213 @@ class _CommentSectionState extends State<CommentSection> {
     super.dispose();
   }
 
+  void _editComment(BuildContext context, String commentId) {
+    // Add logic to edit comment
+  }
+
+  void _deleteComment(BuildContext context, String commentId) {
+    context.read<CommentBloc>().add(CommentDelete(commentId: commentId));
+    showSnackBar(context, "You have successfully deleted your comment");
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CommentBloc, CommentState>(
+    return BlocConsumer<CommentBloc, CommentState>(
       listener: (context, state) {
-        if (state is CommentUploadSuccess) {
-          // Fetch comments after a successful upload
+        if (state is CommentUploadSuccess || state is CommentDeleteSuccess) {
           context
               .read<CommentBloc>()
               .add(CommentFetchAllForBlog(blogId: widget.blogId));
           showSnackBar(context, 'Comment posted successfully');
         } else if (state is CommentFailure) {
-          showSnackBar(context, state.error);
+          showSnackBar(context, state.error, isError: true);
         }
       },
-      child: Column(
-        children: [
-          Form(
-            key: formKey,
-            child: BlogEditor(
-              controller: _contentController,
-              hintText: "Comment",
-              suffixIcon: const Icon(
-                Icons.send,
-                color: AppPallete.gradient3,
-              ),
-              onSuffixIconPressed: () {
-                if (formKey.currentState?.validate() ?? false) {
-                  _uploadComment(context);
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-          BlocBuilder<CommentBloc, CommentState>(
-            builder: (context, state) {
-              if (state is CommentLoading) {
-                return const Loader();
-              } else if (state is CommentFailure) {
-                Text(
-                  'Failed to load comments: ${state.error}',
-                  style: const TextStyle(color: Colors.red),
-                );
-                showSnackBar(context, state.error);
-              } else if (state is CommentsDisplaySuccess) {
-                if (state.comments.isEmpty) {
-                  return const Text(
-                      "No comments yet. Be the first to comment!");
-                }
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: state.comments.length,
-                  itemBuilder: (context, index) {
-                    final comment = state.comments[index];
-                    return ListTile(
-                      title: Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: comment.posterAvatar != null
-                                ? NetworkImage(comment.posterAvatar!)
-                                : null,
-                            child: comment.posterAvatar == null
-                                ? const Icon(Icons.account_circle, size: 40)
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('${comment.posterName}'),
-                                  const Icon(Icons.more_vert)
-                                ],
-                              ),
-                              Text(
-                                formatDateBydMMMYYYY(comment.updatedAt),
-                                style: const TextStyle(
-                                  color: AppPallete.greyColor,
-                                  fontSize: 16,
+      builder: (context, state) {
+        if (state is CommentLoading) {
+          return const Loader();
+        } else if (state is CommentFailure) {
+          return Text(
+            'Failed to load comments: ${state.error}',
+            style: const TextStyle(color: Colors.red),
+          );
+        } else if (state is CommentsDisplaySuccess) {
+          if (state.comments.isEmpty) {
+            return Column(
+              children: [
+                Form(
+                  key: formKey,
+                  child: BlogEditor(
+                    controller: _contentController,
+                    hintText: "Comment",
+                    suffixIcon: const Icon(
+                      Icons.send,
+                      color: AppPallete.gradient3,
+                    ),
+                    onSuffixIconPressed: () {
+                      if (formKey.currentState?.validate() ?? false) {
+                        _uploadComment(context);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (state.comments.isNotEmpty)
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: state.comments.length,
+                    itemBuilder: (context, index) {
+                      final comment = state.comments[index];
+                      return ListTile(
+                        title: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: comment.posterAvatar != null
+                                  ? NetworkImage(comment.posterAvatar!)
+                                  : null,
+                              child: comment.posterAvatar == null
+                                  ? const Icon(Icons.account_circle, size: 40)
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('${comment.posterName}'),
+                                    GestureDetector(
+                                      onTap: () => showOptions(
+                                        context: context,
+                                        onEdit: () =>
+                                            _editComment(context, comment.id),
+                                        onDelete: () =>
+                                            _deleteComment(context, comment.id),
+                                        commentId: comment.id,
+                                      ),
+                                      child: const Icon(Icons.more_vert),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(
-                              height: 4), // Space between date and content
-                          Text(
-                            comment.content,
-                            style: const TextStyle(fontSize: 16),
-                            overflow: TextOverflow
-                                .visible, // Ensure it wraps to the next line
-                          ),
-                        ],
-                      ),
-                    );
+                                Text(
+                                  formatDateBydMMMYYYY(comment.updatedAt),
+                                  style: const TextStyle(
+                                    color: AppPallete.greyColor,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(
+                              comment.content,
+                              style: const TextStyle(fontSize: 16),
+                              overflow: TextOverflow.visible,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            );
+          }
+
+          return Column(
+            children: [
+              Form(
+                key: formKey,
+                child: BlogEditor(
+                  controller: _contentController,
+                  hintText: "Comment",
+                  suffixIcon: const Icon(
+                    Icons.send,
+                    color: AppPallete.gradient3,
+                  ),
+                  onSuffixIconPressed: () {
+                    if (formKey.currentState?.validate() ?? false) {
+                      _uploadComment(context);
+                    }
                   },
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: state.comments.length,
+                itemBuilder: (context, index) {
+                  final comment = state.comments[index];
+                  return ListTile(
+                    title: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: comment.posterAvatar != null
+                              ? NetworkImage(comment.posterAvatar!)
+                              : null,
+                          child: comment.posterAvatar == null
+                              ? const Icon(Icons.account_circle, size: 40)
+                              : null,
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('${comment.posterName}'),
+                                GestureDetector(
+                                  onTap: () => showOptions(
+                                    context: context,
+                                    onEdit: () =>
+                                        _editComment(context, comment.id),
+                                    onDelete: () =>
+                                        _deleteComment(context, comment.id),
+                                    commentId: comment.id,
+                                  ),
+                                  child: const Icon(Icons.more_vert),
+                                ),
+                              ],
+                            ),
+                            Text(
+                              formatDateBydMMMYYYY(comment.updatedAt),
+                              style: const TextStyle(
+                                color: AppPallete.greyColor,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          comment.content,
+                          style: const TextStyle(fontSize: 16),
+                          overflow: TextOverflow.visible,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 }

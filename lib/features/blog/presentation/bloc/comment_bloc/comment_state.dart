@@ -19,3 +19,5 @@ final class CommentsDisplaySuccess extends CommentState {
 
   CommentsDisplaySuccess({required this.comments});
 }
+
+final class CommentDeleteSuccess extends CommentState {}

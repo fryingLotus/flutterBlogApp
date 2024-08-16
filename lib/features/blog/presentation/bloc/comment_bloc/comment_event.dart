@@ -17,3 +17,9 @@ final class CommentFetchAllForBlog extends CommentEvent {
 
   CommentFetchAllForBlog({required this.blogId});
 }
+
+final class CommentDelete extends CommentEvent {
+  final String commentId;
+
+  CommentDelete({required this.commentId});
+}
