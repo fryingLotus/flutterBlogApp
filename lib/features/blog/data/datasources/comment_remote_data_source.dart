@@ -7,6 +7,7 @@ abstract interface class CommentRemoteDataSource {
   Future<List<CommentModel>> getCommentsForBlog(String blogId);
   Future<void> deleteComment(String commentId);
   Future<CommentModel> updateComment(CommentModel comment);
+  Future<CommentModel> getCommentById(String commentId);
 }
 
 class CommentRemoteDataSourceImpl implements CommentRemoteDataSource {
@@ -68,6 +69,23 @@ class CommentRemoteDataSourceImpl implements CommentRemoteDataSource {
           .eq('id', comment.id)
           .select();
       return CommentModel.fromJson(commentData.first);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<CommentModel> getCommentById(String commentId) async {
+    try {
+      final commentData = await supabaseClient
+          .from('comments')
+          .select()
+          .eq('id', commentId)
+          .single();
+
+      return CommentModel.fromJson(commentData);
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

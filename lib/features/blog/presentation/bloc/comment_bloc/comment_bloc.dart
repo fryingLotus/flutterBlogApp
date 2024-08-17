@@ -1,6 +1,7 @@
 import 'package:blogapp/features/blog/domain/entities/comment.dart';
 import 'package:blogapp/features/blog/domain/usecases/comments/delete_comment.dart';
 import 'package:blogapp/features/blog/domain/usecases/comments/get_comments_for_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/comments/update_comment.dart';
 import 'package:blogapp/features/blog/domain/usecases/comments/upload_comment.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,18 +13,22 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
   final UploadComment _uploadComment;
   final GetCommentsForBlog _getCommentsForBlog;
   final DeleteComment _deleteComment;
+  final UpdateComment _updateComment;
 
   CommentBloc({
     required UploadComment uploadComment,
     required GetCommentsForBlog getCommentsForBlog,
     required DeleteComment deleteComment,
+    required UpdateComment updateComment,
   })  : _uploadComment = uploadComment,
         _deleteComment = deleteComment,
         _getCommentsForBlog = getCommentsForBlog,
+        _updateComment = updateComment,
         super(CommentInitial()) {
     on<CommentUpload>(_onCommentUpload);
     on<CommentFetchAllForBlog>(_onGetCommentsForBlog);
     on<CommentDelete>(_onDeleteComment);
+    on<CommentUpdate>(_onUpdateComment);
   }
 
   void _onCommentUpload(
@@ -68,6 +73,16 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
     res.fold(
       (failure) => emit(CommentFailure(failure.message)),
       (comments) => emit(CommentDeleteSuccess()),
+    );
+  }
+
+  void _onUpdateComment(CommentUpdate event, Emitter<CommentState> emit) async {
+    emit(CommentLoading());
+    final res = await _updateComment(UpdateCommentParams(
+        commentId: event.commentId, content: event.content));
+    res.fold(
+      (failure) => emit(CommentFailure(failure.message)),
+      (comments) => emit(CommentUpdateSuccess()),
     );
   }
 }

@@ -18,4 +18,7 @@ abstract interface class CommentRepository {
     required String commentId,
     String? content,
   });
+  Future<Either<Failures, Comment>> getCommentById({
+    required String commentId,
+  });
 }

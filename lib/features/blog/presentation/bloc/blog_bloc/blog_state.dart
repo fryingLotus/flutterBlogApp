@@ -20,6 +20,7 @@ final class BlogDeleteSuccess extends BlogState {}
 
 final class BlogsDisplaySuccess extends BlogState {
   final List<Blog> blogs;
+
   BlogsDisplaySuccess(this.blogs);
 }
 

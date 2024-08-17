@@ -23,3 +23,10 @@ final class CommentDelete extends CommentEvent {
 
   CommentDelete({required this.commentId});
 }
+
+final class CommentUpdate extends CommentEvent {
+  final String commentId;
+  final String content;
+
+  CommentUpdate({required this.commentId, required this.content});
+}

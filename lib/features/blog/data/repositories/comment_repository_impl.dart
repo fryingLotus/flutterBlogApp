@@ -13,6 +13,7 @@ class CommentRepositoryImpl implements CommentRepository {
   final ConnectionChecker connectionChecker;
 
   CommentRepositoryImpl(this.commentRemoteDataSource, this.connectionChecker);
+
   @override
   Future<Either<Failures, bool>> deleteComment(String commentId) async {
     try {
@@ -63,8 +64,39 @@ class CommentRepositoryImpl implements CommentRepository {
 
   @override
   Future<Either<Failures, Comment>> updateComment(
-      {required String commentId, String? content}) {
-    // TODO: implement updateComment
-    throw UnimplementedError();
+      {required String commentId, String? content}) async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        return left(Failures('No Internet Connection!'));
+      }
+
+      final existingCommentResult =
+          await commentRemoteDataSource.getCommentById(commentId);
+
+      final updatedComment = existingCommentResult.copyWith(
+        content: content ?? existingCommentResult.content,
+        updatedAt: DateTime.now(),
+      );
+
+      final result =
+          await commentRemoteDataSource.updateComment(updatedComment);
+
+      return right(result);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures('An unexpected error occurred'));
+    }
+  }
+
+  @override
+  Future<Either<Failures, Comment>> getCommentById(
+      {required String commentId}) async {
+    try {
+      final comment = await commentRemoteDataSource.getCommentById(commentId);
+      return right(comment);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    }
   }
 }

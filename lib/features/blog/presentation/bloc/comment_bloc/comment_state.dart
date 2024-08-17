@@ -21,3 +21,5 @@ final class CommentsDisplaySuccess extends CommentState {
 }
 
 final class CommentDeleteSuccess extends CommentState {}
+
+final class CommentUpdateSuccess extends CommentState {}

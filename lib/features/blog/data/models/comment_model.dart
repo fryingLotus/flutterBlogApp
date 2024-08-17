@@ -24,6 +24,18 @@ class CommentModel extends Comment {
           : DateTime.parse(map['updated_at']),
     );
   }
+  factory CommentModel.fromComment(Comment comment) {
+    return CommentModel(
+      id: comment.id,
+      posterId: comment.posterId,
+      blogId: comment.blogId,
+      content: comment.content,
+      posterAvatar: comment.posterAvatar,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+      posterName: comment.posterName,
+    );
+  }
 
   CommentModel copyWith({
     String? id,
