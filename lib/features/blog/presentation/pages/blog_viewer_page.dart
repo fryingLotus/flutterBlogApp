@@ -74,14 +74,17 @@ class BlogViewerPage extends StatelessWidget {
                             style: const TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold),
                           ),
-                          GestureDetector(
-                            child: const Icon(Icons.more_vert),
-                            onTap: () => showOptions(
-                              context: context,
-                              onEdit: () => _editBlog(context),
-                              onDelete: () => _deleteBlog(context),
-                            ),
-                          ),
+                          posterId == blog.posterId
+                              ? GestureDetector(
+                                  child: const Icon(Icons.more_vert),
+                                  onTap: () => showOptions(
+                                    context: context,
+                                    onEdit: () => _editBlog(context),
+                                    onDelete: () => _deleteBlog(context),
+                                  ),
+                                )
+                              : const SizedBox
+                                  .shrink(), // Returns an empty widget if the condition is false
                         ],
                       ),
                       const SizedBox(height: 20),

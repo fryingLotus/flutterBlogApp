@@ -13,12 +13,23 @@ class GetCommentsForBlog
   @override
   Future<Either<Failures, List<Comment>>> call(
       GetCommentsForBlogParams params) async {
-    return await commentRepository.getCommentsForBlog(blogId: params.blogId);
+    return await commentRepository.getCommentsForBlog(
+      blogId: params.blogId,
+      page: params.page,
+      pageSize: params.pageSize,
+    );
   }
 }
 
 class GetCommentsForBlogParams {
   final String blogId;
+  final int page;
+  final int pageSize;
 
-  GetCommentsForBlogParams({required this.blogId});
+  GetCommentsForBlogParams({
+    required this.blogId,
+    this.page = 1,
+    this.pageSize = 10,
+  });
 }
+

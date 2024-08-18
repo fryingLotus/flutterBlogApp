@@ -16,8 +16,20 @@ final class CommentUploadSuccess extends CommentState {}
 
 final class CommentsDisplaySuccess extends CommentState {
   final List<Comment> comments;
+  final bool hasMore;
 
-  CommentsDisplaySuccess({required this.comments});
+  CommentsDisplaySuccess({
+    required this.comments,
+    required this.hasMore,
+  });
+}
+
+final class CommentLoadingMore extends CommentState {
+  final List<Comment> comments;
+
+  CommentLoadingMore({
+    required this.comments,
+  });
 }
 
 final class CommentDeleteSuccess extends CommentState {}

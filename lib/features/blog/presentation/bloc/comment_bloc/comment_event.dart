@@ -14,8 +14,14 @@ final class CommentUpload extends CommentEvent {
 
 final class CommentFetchAllForBlog extends CommentEvent {
   final String blogId;
+  final int page;
+  final int pageSize;
 
-  CommentFetchAllForBlog({required this.blogId});
+  CommentFetchAllForBlog({
+    required this.blogId,
+    this.page = 1,
+    this.pageSize = 10,
+  });
 }
 
 final class CommentDelete extends CommentEvent {

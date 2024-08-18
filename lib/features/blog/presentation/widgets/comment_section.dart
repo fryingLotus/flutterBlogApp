@@ -13,44 +13,125 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class CommentSection extends StatefulWidget {
   final String blogId;
 
-  const CommentSection({
-    super.key,
-    required this.blogId,
-  });
+  const CommentSection({Key? key, required this.blogId}) : super(key: key);
 
   @override
-  State<CommentSection> createState() => _CommentSectionState();
+  _CommentSectionState createState() => _CommentSectionState();
 }
 
 class _CommentSectionState extends State<CommentSection> {
   final TextEditingController _contentController = TextEditingController();
   final GlobalKey<FormState> _uploadFormKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
+  final List<CommentModel> _comments = [];
+  int _currentPage = 1;
+  bool _hasMoreComments = true;
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
-    context
-        .read<CommentBloc>()
-        .add(CommentFetchAllForBlog(blogId: widget.blogId));
-  }
+    _fetchComments();
 
-  void _uploadComment(BuildContext context) {
-    if (_uploadFormKey.currentState?.validate() ?? false) {
-      final posterId =
-          (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
-      context.read<CommentBloc>().add(CommentUpload(
-            posterId: posterId,
-            blogId: widget.blogId,
-            content: _contentController.text.trim(),
-          ));
-      _contentController.clear();
-    }
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels ==
+              _scrollController.position.maxScrollExtent &&
+          !_isLoadingMore) {
+        if (_hasMoreComments) {
+          print('Fetching more comments for page $_currentPage');
+          _currentPage++;
+          _fetchComments();
+        }
+      }
+
+      if (_scrollController.position.pixels ==
+              _scrollController.position.minScrollExtent &&
+          !_isLoadingMore &&
+          _currentPage > 1) {
+        print('Fetching previous comments for page ${_currentPage - 1}');
+        _currentPage--;
+        _fetchComments(fetchPrevious: true);
+      }
+    });
   }
 
   @override
   void dispose() {
     _contentController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<CommentBloc, CommentState>(
+      listener: (context, state) {
+        if (state is CommentUploadSuccess) {
+          print('Comment uploaded successfully, fetching comments again');
+          _fetchComments(); // Refresh the list after upload
+          showSnackBar(context, 'Comment posted successfully');
+        } else if (state is CommentDeleteSuccess) {
+          print('Comment deleted successfully, fetching comments again');
+          _fetchComments(); // Refresh the list after deletion
+          showSnackBar(context, 'Comment deleted successfully');
+        } else if (state is CommentUpdateSuccess) {
+          print('Comment updated successfully, fetching comments again');
+          _fetchComments(); // Refresh the list after update
+          showSnackBar(context, 'Comment updated successfully');
+        } else if (state is CommentFailure) {
+          showSnackBar(context, state.error, isError: true);
+        } else if (state is CommentLoadingMore) {
+          _isLoadingMore = true;
+        } else if (state is CommentsDisplaySuccess) {
+          print(
+              'Received ${state.comments.length} comments for page $_currentPage');
+          _comments.addAll(state.comments
+              .map((comment) => CommentModel.fromComment(comment)));
+          _hasMoreComments = state.hasMore;
+          _isLoadingMore = false;
+        }
+      },
+      builder: (context, state) {
+        if (state is CommentLoading && _currentPage == 1) {
+          return const Loader();
+        } else if (state is CommentFailure) {
+          return Text(
+            'Failed to load comments: ${state.error}',
+            style: const TextStyle(color: Colors.red),
+          );
+        } else if (state is CommentsDisplaySuccess) {
+          return Column(
+            children: [
+              _buildCommentForm(context, _contentController,
+                  hintText: 'Add a comment',
+                  onSubmit: () => _uploadComment(context),
+                  formKey: _uploadFormKey),
+              const SizedBox(height: 20),
+              if (state.comments.isEmpty)
+                const Center(child: Text('No comments yet')),
+              if (state.comments.isNotEmpty)
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: 500),
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      children: _comments
+                          .map((comment) => _buildCommentTile(
+                                context,
+                                comment,
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ),
+              if (_isLoadingMore)
+                const Center(child: CircularProgressIndicator()),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
   }
 
   Widget _buildCommentForm(
@@ -63,10 +144,7 @@ class _CommentSectionState extends State<CommentSection> {
       child: BlogEditor(
         controller: controller,
         hintText: hintText ?? "Comment",
-        suffixIcon: const Icon(
-          Icons.send,
-          color: AppPallete.gradient3,
-        ),
+        suffixIcon: const Icon(Icons.send, color: AppPallete.gradient3),
         onSuffixIconPressed: () {
           if (formKey?.currentState?.validate() ?? false) {
             onSubmit?.call();
@@ -74,55 +152,6 @@ class _CommentSectionState extends State<CommentSection> {
         },
       ),
     );
-  }
-
-  void _editComment(
-      BuildContext context, String commentId, String initialContent) {
-    final TextEditingController editController =
-        TextEditingController(text: initialContent);
-    final GlobalKey<FormState> editFormKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Comment'),
-          content: _buildCommentForm(context, editController,
-              hintText: 'Edit your comment',
-              formKey: editFormKey, onSubmit: () {
-            if (editFormKey.currentState?.validate() ?? false) {
-              context.read<CommentBloc>().add(CommentUpdate(
-                    commentId: commentId,
-                    content: editController.text.trim(),
-                  ));
-              Navigator.of(context).pop();
-            }
-          }),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (editFormKey.currentState?.validate() ?? false) {
-                  context.read<CommentBloc>().add(CommentUpdate(
-                        commentId: commentId,
-                        content: editController.text.trim(),
-                      ));
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteComment(BuildContext context, String commentId) {
-    context.read<CommentBloc>().add(CommentDelete(commentId: commentId));
   }
 
   Widget _buildCommentTile(BuildContext context, CommentModel comment) {
@@ -182,63 +211,78 @@ class _CommentSectionState extends State<CommentSection> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocConsumer<CommentBloc, CommentState>(
-      listener: (context, state) {
-        if (state is CommentUploadSuccess) {
-          context
-              .read<CommentBloc>()
-              .add(CommentFetchAllForBlog(blogId: widget.blogId));
-          showSnackBar(context, 'Comment posted successfully');
-        } else if (state is CommentDeleteSuccess) {
-          context
-              .read<CommentBloc>()
-              .add(CommentFetchAllForBlog(blogId: widget.blogId));
-          showSnackBar(context, 'Comment deleted successfully');
-        } else if (state is CommentUpdateSuccess) {
-          context
-              .read<CommentBloc>()
-              .add(CommentFetchAllForBlog(blogId: widget.blogId));
-          showSnackBar(context, 'Comment updated successfully');
-        } else if (state is CommentFailure) {
-          showSnackBar(context, state.error, isError: true);
-        }
-      },
-      builder: (context, state) {
-        if (state is CommentLoading) {
-          return const Loader();
-        } else if (state is CommentFailure) {
-          return Text(
-            'Failed to load comments: ${state.error}',
-            style: const TextStyle(color: Colors.red),
-          );
-        } else if (state is CommentsDisplaySuccess) {
-          return Column(
-            children: [
-              _buildCommentForm(context, _contentController,
-                  hintText: 'Add a comment',
-                  onSubmit: () => _uploadComment(context),
-                  formKey: _uploadFormKey), // Unique key for uploading
-              const SizedBox(height: 20),
-              if (state.comments.isEmpty)
-                const Center(child: Text('No comments yet')),
-              if (state.comments.isNotEmpty)
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: state.comments.length,
-                  itemBuilder: (context, index) {
-                    final comment = state.comments[index];
-                    final commentModel = CommentModel.fromComment(comment);
-                    return _buildCommentTile(context, commentModel);
-                  },
-                ),
-            ],
-          );
-        }
-        return const SizedBox.shrink();
+  void _deleteComment(BuildContext context, String commentId) {
+    context.read<CommentBloc>().add(CommentDelete(commentId: commentId));
+  }
+
+  void _editComment(
+      BuildContext context, String commentId, String initialContent) {
+    final TextEditingController editController =
+        TextEditingController(text: initialContent);
+    final GlobalKey<FormState> editFormKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Comment'),
+          content: _buildCommentForm(context, editController,
+              hintText: 'Edit your comment',
+              formKey: editFormKey, onSubmit: () {
+            if (editFormKey.currentState?.validate() ?? false) {
+              context.read<CommentBloc>().add(CommentUpdate(
+                    commentId: commentId,
+                    content: editController.text.trim(),
+                  ));
+              Navigator.of(context).pop();
+            }
+          }),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (editFormKey.currentState?.validate() ?? false) {
+                  context.read<CommentBloc>().add(CommentUpdate(
+                        commentId: commentId,
+                        content: editController.text.trim(),
+                      ));
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
       },
     );
   }
+
+  void _fetchComments({bool fetchPrevious = false}) {
+    if (fetchPrevious && _currentPage <= 0)
+      return; // Prevent fetching if there's no previous page
+
+    print('Fetching comments for page $_currentPage');
+    context.read<CommentBloc>().add(
+          CommentFetchAllForBlog(
+            blogId: widget.blogId,
+            page: _currentPage,
+            pageSize: 10, // Set your preferred page size
+          ),
+        );
+  }
+
+  void _uploadComment(BuildContext context) {
+    final posterId =
+        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+    context.read<CommentBloc>().add(CommentUpload(
+          blogId: widget.blogId,
+          content: _contentController.text.trim(),
+          posterId: posterId,
+        ));
+    _contentController.clear();
+  }
 }
+

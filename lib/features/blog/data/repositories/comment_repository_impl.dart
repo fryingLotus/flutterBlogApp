@@ -25,10 +25,17 @@ class CommentRepositoryImpl implements CommentRepository {
   }
 
   @override
-  Future<Either<Failures, List<Comment>>> getCommentsForBlog(
-      {required String blogId}) async {
+  Future<Either<Failures, List<Comment>>> getCommentsForBlog({
+    required String blogId,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
     try {
-      final comments = await commentRemoteDataSource.getCommentsForBlog(blogId);
+      final comments = await commentRemoteDataSource.getCommentsForBlog(
+        blogId,
+        page: page,
+        pageSize: pageSize,
+      );
       return right(comments);
     } on ServerException catch (e) {
       return left(Failures(e.message));

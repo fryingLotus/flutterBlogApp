@@ -4,7 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract interface class CommentRemoteDataSource {
   Future<CommentModel> uploadComment(CommentModel comment);
-  Future<List<CommentModel>> getCommentsForBlog(String blogId);
+  Future<List<CommentModel>> getCommentsForBlog(String blogId,
+      {int page, int pageSize});
   Future<void> deleteComment(String commentId);
   Future<CommentModel> updateComment(CommentModel comment);
   Future<CommentModel> getCommentById(String commentId);
@@ -31,12 +32,19 @@ class CommentRemoteDataSourceImpl implements CommentRemoteDataSource {
   }
 
   @override
-  Future<List<CommentModel>> getCommentsForBlog(String blogId) async {
+  Future<List<CommentModel>> getCommentsForBlog(String blogId,
+      {int page = 1, int pageSize = 10}) async {
     try {
+      final from = (page - 1) * pageSize;
+      final to = from + pageSize - 1;
+
       final comments = await supabaseClient
           .from('comments')
           .select('*,profiles (name,avatar_url)')
-          .eq('blog_id', blogId);
+          .eq('blog_id', blogId)
+          .order('created_at', ascending: false)
+          .range(from, to);
+
       return comments
           .map((comment) => CommentModel.fromJson(comment).copyWith(
               posterName: comment['profiles']['name'],

@@ -55,14 +55,41 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
     CommentFetchAllForBlog event,
     Emitter<CommentState> emit,
   ) async {
-    emit(CommentLoading());
+    if (state is CommentsDisplaySuccess && event.page > 1) {
+      // Loading more comments for pagination
+      emit(CommentLoadingMore(
+          comments: (state as CommentsDisplaySuccess).comments));
+    } else {
+      // Loading initial comments
+      emit(CommentLoading());
+    }
 
     final result = await _getCommentsForBlog(
-        GetCommentsForBlogParams(blogId: event.blogId));
+      GetCommentsForBlogParams(
+        blogId: event.blogId,
+        page: event.page,
+        pageSize: event.pageSize,
+      ),
+    );
 
     result.fold(
       (failure) => emit(CommentFailure(failure.message)),
-      (comments) => emit(CommentsDisplaySuccess(comments: comments)),
+      (newComments) {
+        if (state is CommentsDisplaySuccess && event.page > 1) {
+          // Appending new comments to the existing list
+          final currentState = state as CommentsDisplaySuccess;
+          final allComments = List<Comment>.from(currentState.comments)
+            ..addAll(newComments);
+          emit(CommentsDisplaySuccess(
+              comments: allComments,
+              hasMore: newComments.length == event.pageSize));
+        } else {
+          // Displaying the first page of comments
+          emit(CommentsDisplaySuccess(
+              comments: newComments,
+              hasMore: newComments.length == event.pageSize));
+        }
+      },
     );
   }
 
