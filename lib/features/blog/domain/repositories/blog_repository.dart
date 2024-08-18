@@ -25,4 +25,6 @@ abstract interface class BlogRepository {
     required List<String> topics,
     String? currentImageUrl,
   });
+  Future<Either<Failures, bool>> likeBlog(String blogId);
+  Future<Either<Failures, bool>> unlikeBlog(String blogId);
 }

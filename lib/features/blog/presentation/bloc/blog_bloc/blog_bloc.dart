@@ -5,6 +5,8 @@ import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/like_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/unlike_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/update_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/upload_blog.dart';
 import 'package:flutter/material.dart';
@@ -19,17 +21,23 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final GetUserBlogs _getUserBlogs;
   final DeleteBlog _deleteBlog;
   final UpdateBlog _updateBlog;
+  final LikeBlog _likeBlog;
+  final UnlikeBlog _unlikeBlog;
   BlogBloc({
     required UploadBlog uploadBlog,
     required GetAllBlogs getAllBlogs,
     required DeleteBlog deleteBlog,
     required GetUserBlogs getUserBlogs,
     required UpdateBlog updateBlog,
+    required LikeBlog likeBlog,
+    required UnlikeBlog unlikeBlog,
   })  : _uploadBlog = uploadBlog,
         _getAllBlogs = getAllBlogs,
         _getUserBlogs = getUserBlogs,
         _deleteBlog = deleteBlog,
+        _likeBlog = likeBlog,
         _updateBlog = updateBlog,
+        _unlikeBlog = unlikeBlog,
         super(BlogInitial()) {
     on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
@@ -37,6 +45,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     on<BlogFetchUserBlogs>(_onFetchUserBlog);
     on<BlogDelete>(_onDeleteBlog);
     on<BlogUpdate>(_onUpdateBlog);
+    on<BlogLike>(_onLikeBlog);
   }
   void _onBlogUpload(
     BlogUpload event,
@@ -105,6 +114,34 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
       (r) {
         print('Blog deleted successfully.');
         emit(BlogDeleteSuccess());
+      },
+    );
+  }
+
+  void _onLikeBlog(BlogLike event, Emitter<BlogState> emit) async {
+    final res = await _likeBlog(LikeBlogParams(blogId: event.blogId));
+    res.fold(
+      (l) {
+        print('like failed: ${l.message}');
+        emit(BlogFailure(l.message));
+      },
+      (r) {
+        print('Blog like successfully.');
+        emit(BlogLikeSuccess());
+      },
+    );
+  }
+
+  void _onUnlikeBlog(BlogUnlike event, Emitter<BlogState> emit) async {
+    final res = await _unlikeBlog(UnlikeBlogParams(blogId: event.blogId));
+    res.fold(
+      (l) {
+        print('unlike failed: ${l.message}');
+        emit(BlogFailure(l.message));
+      },
+      (r) {
+        print('Blog unlike successfully.');
+        emit(BlogUnlikeSuccess());
       },
     );
   }

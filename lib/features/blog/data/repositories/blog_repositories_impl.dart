@@ -137,4 +137,28 @@ class BlogRepositoriesImpl implements BlogRepository {
       return left(Failures('An unknown error occurred.'));
     }
   }
+
+  @override
+  Future<Either<Failures, bool>> likeBlog(String blogId) async {
+    try {
+      await blogRemoteDataSource.likeBlog(blogId);
+      return right(true);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures('An unknown error occurred.'));
+    }
+  }
+
+  @override
+  Future<Either<Failures, bool>> unlikeBlog(String blogId) async {
+    try {
+      await blogRemoteDataSource.unlikeBlog(blogId);
+      return right(true);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures('An unknown error occurred.'));
+    }
+  }
 }

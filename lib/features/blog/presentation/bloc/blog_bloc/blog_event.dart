@@ -48,3 +48,15 @@ final class BlogDelete extends BlogEvent {
 
   BlogDelete({required this.blogId});
 }
+
+final class BlogLike extends BlogEvent {
+  final String blogId;
+
+  BlogLike({required this.blogId});
+}
+
+final class BlogUnlike extends BlogEvent {
+  final String blogId;
+
+  BlogUnlike({required this.blogId});
+}

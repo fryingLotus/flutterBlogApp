@@ -14,6 +14,8 @@ abstract interface class BlogRemoteDataSource {
   Future<List<BlogModel>> getUserBlogs();
   Future<void> deleteBlog(String blogId);
   Future<BlogModel> updateBlog(BlogModel blog);
+  Future<void> likeBlog(String blogId);
+  Future<void> unlikeBlog(String blogId);
 }
 
 class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
@@ -111,6 +113,40 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
       }
 
       return BlogModel.fromJson(blogData.first);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> likeBlog(String blogId) async {
+    try {
+      final userId = supabaseClient.auth.currentUser?.id;
+
+      await supabaseClient.rpc('like_blog_or_comment', params: {
+        'p_poster_id': userId,
+        'p_blog_id': blogId,
+        'p_comment_id': null,
+      });
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> unlikeBlog(String blogId) async {
+    try {
+      final userId = supabaseClient.auth.currentUser?.id;
+
+      await supabaseClient.rpc('unlike_blog_or_comment', params: {
+        'p_poster_id': userId,
+        'p_blog_id': blogId,
+        'p_comment_id': null,
+      });
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

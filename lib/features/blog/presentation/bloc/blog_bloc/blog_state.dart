@@ -18,6 +18,10 @@ final class BlogUpdateSuccess extends BlogState {}
 
 final class BlogDeleteSuccess extends BlogState {}
 
+final class BlogLikeSuccess extends BlogState {}
+
+final class BlogUnlikeSuccess extends BlogState {}
+
 final class BlogsDisplaySuccess extends BlogState {
   final List<Blog> blogs;
 

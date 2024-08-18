@@ -78,13 +78,17 @@ void _initBlog() {
     ..registerFactory(() => GetUserBlogs(serviceLocator()))
     ..registerFactory(() => DeleteBlog(serviceLocator()))
     ..registerFactory(() => UpdateBlog(serviceLocator()))
+    ..registerFactory(() => LikeBlog(serviceLocator()))
+    ..registerFactory(() => UnlikeBlog(serviceLocator()))
     // Bloc
     ..registerLazySingleton(() => BlogBloc(
         uploadBlog: serviceLocator(),
         getAllBlogs: serviceLocator(),
         getUserBlogs: serviceLocator(),
         deleteBlog: serviceLocator(),
-        updateBlog: serviceLocator()));
+        updateBlog: serviceLocator(),
+        likeBlog: serviceLocator(),
+        unlikeBlog: serviceLocator()));
 }
 
 void _initComment() {

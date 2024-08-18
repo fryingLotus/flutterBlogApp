@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 
 class BlogModel extends Blog {
@@ -9,7 +11,8 @@ class BlogModel extends Blog {
       required super.imageUrl,
       required super.topics,
       required super.updatedAt,
-      super.posterName});
+      super.posterName,
+      super.likes_count});
 
   factory BlogModel.fromJson(Map<String, dynamic> map) {
     return BlogModel(
@@ -34,17 +37,19 @@ class BlogModel extends Blog {
     List<String>? topics,
     DateTime? updatedAt,
     String? posterName,
+    // ignore: non_constant_identifier_names
+    int? likes_count,
   }) {
     return BlogModel(
-      id: id ?? this.id,
-      posterId: posterId ?? this.posterId,
-      title: title ?? this.title,
-      content: content ?? this.content,
-      imageUrl: imageUrl ?? this.imageUrl,
-      topics: topics ?? this.topics,
-      updatedAt: updatedAt ?? this.updatedAt,
-      posterName: posterName ?? this.posterName,
-    );
+        id: id ?? this.id,
+        posterId: posterId ?? this.posterId,
+        title: title ?? this.title,
+        content: content ?? this.content,
+        imageUrl: imageUrl ?? this.imageUrl,
+        topics: topics ?? this.topics,
+        updatedAt: updatedAt ?? this.updatedAt,
+        posterName: posterName ?? this.posterName,
+        likes_count: likes_count ?? this.likes_count);
   }
 
   Map<String, dynamic> toJson() {

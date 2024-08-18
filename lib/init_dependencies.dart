@@ -20,6 +20,8 @@ import 'package:blogapp/features/blog/domain/repositories/comment_repository.dar
 import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/like_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/unlike_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/update_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/upload_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/comments/delete_comment.dart';
