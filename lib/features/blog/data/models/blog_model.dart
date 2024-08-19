@@ -25,6 +25,9 @@ class BlogModel extends Blog {
       updatedAt: map['updated_at'] == null
           ? DateTime.now()
           : DateTime.parse(map['updated_at']),
+      likes_count: map['likes_count'] != null
+          ? map['likes_count'] as int
+          : 0, // Handle null safely
     );
   }
 
@@ -60,7 +63,8 @@ class BlogModel extends Blog {
       'content': content,
       'image_url': imageUrl,
       'topics': topics,
-      'updated_at': updatedAt.toIso8601String()
+      'updated_at': updatedAt.toIso8601String(),
+      'likes_count': likes_count
     };
   }
 }

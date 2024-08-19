@@ -19,11 +19,32 @@ class BlogOwnedPage extends StatefulWidget {
 }
 
 class _BlogOwnedPageState extends State<BlogOwnedPage> {
+  final Map<String, bool> _likedBlogs = {};
+
   @override
   void initState() {
     super.initState();
     print('Fetching user blogs...');
     context.read<BlogBloc>().add(BlogFetchUserBlogs());
+  }
+
+  Future<void> _toggleLike(String blogId, bool isLiked) async {
+    try {
+      if (isLiked) {
+        // Unlike the blog
+        context.read<BlogBloc>().add(BlogUnlike(blogId: blogId));
+      } else {
+        // Like the blog
+        context.read<BlogBloc>().add(BlogLike(blogId: blogId));
+      }
+      setState(() {
+        _likedBlogs[blogId] = !isLiked;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $e')),
+      );
+    }
   }
 
   @override
@@ -57,11 +78,14 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
               itemCount: state.userBlogs.length,
               itemBuilder: (context, index) {
                 final blog = state.userBlogs[index];
+                final isLiked = _likedBlogs[blog.id] ?? false;
                 return BlogCard(
                   blog: blog,
                   color: index % 2 == 0
                       ? AppPallete.gradient1
                       : AppPallete.gradient2,
+                  isLiked: isLiked,
+                  onToggleLike: () => _toggleLike(blog.id, isLiked),
                 );
               },
             );

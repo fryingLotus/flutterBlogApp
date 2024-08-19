@@ -46,6 +46,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     on<BlogDelete>(_onDeleteBlog);
     on<BlogUpdate>(_onUpdateBlog);
     on<BlogLike>(_onLikeBlog);
+    on<BlogUnlike>(_onUnlikeBlog);
   }
   void _onBlogUpload(
     BlogUpload event,

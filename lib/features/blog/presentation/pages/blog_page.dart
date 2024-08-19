@@ -18,6 +18,8 @@ class BlogPage extends StatefulWidget {
 }
 
 class _BlogPageState extends State<BlogPage> {
+  final Map<String, bool> _likedBlogs = {};
+
   @override
   void initState() {
     super.initState();
@@ -25,8 +27,26 @@ class _BlogPageState extends State<BlogPage> {
   }
 
   Future<void> _fetchBlogs() async {
-    print('Fetching all blogs...');
     context.read<BlogBloc>().add(BlogFetchAllBlogs());
+  }
+
+  Future<void> _toggleLike(String blogId, bool isLiked) async {
+    try {
+      if (isLiked) {
+        // Unlike the blog
+        context.read<BlogBloc>().add(BlogUnlike(blogId: blogId));
+      } else {
+        // Like the blog
+        context.read<BlogBloc>().add(BlogLike(blogId: blogId));
+      }
+      setState(() {
+        _likedBlogs[blogId] = !isLiked;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $e')),
+      );
+    }
   }
 
   @override
@@ -53,6 +73,10 @@ class _BlogPageState extends State<BlogPage> {
           listener: (context, state) {
             if (state is BlogFailure) {
               showSnackBar(context, state.error, isError: true);
+            } else if (state is BlogLikeSuccess || state is BlogUnlikeSuccess) {
+              _fetchBlogs();
+
+              showSnackBar(context, "Success!");
             }
           },
           builder: (context, state) {
@@ -66,11 +90,15 @@ class _BlogPageState extends State<BlogPage> {
                   itemCount: state.blogs.length,
                   itemBuilder: (context, index) {
                     final blog = state.blogs[index];
+                    final isLiked = _likedBlogs[blog.id] ?? false;
                     return BlogCard(
+                      key: ValueKey(blog.id),
                       blog: blog,
                       color: index % 2 == 0
                           ? AppPallete.gradient1
                           : AppPallete.gradient2,
+                      isLiked: isLiked,
+                      onToggleLike: () => _toggleLike(blog.id, isLiked),
                     );
                   },
                 ),
