@@ -26,7 +26,9 @@ class BlogCard extends StatelessWidget {
         margin: const EdgeInsets.all(16).copyWith(bottom: 4),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-            color: color, borderRadius: BorderRadius.circular(10)),
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.start,

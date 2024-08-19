@@ -8,6 +8,7 @@ import 'package:blogapp/features/blog/presentation/widgets/blog_drawer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive/hive.dart';
 
 class BlogPage extends StatefulWidget {
   static route() => MaterialPageRoute(builder: (context) => const BlogPage());
@@ -18,12 +19,17 @@ class BlogPage extends StatefulWidget {
 }
 
 class _BlogPageState extends State<BlogPage> {
-  final Map<String, bool> _likedBlogs = {};
+  late Box<bool> _likesBox;
 
   @override
   void initState() {
     super.initState();
+    _openLikesBox();
     _fetchBlogs();
+  }
+
+  Future<void> _openLikesBox() async {
+    _likesBox = Hive.box<bool>(name: 'likesBox');
   }
 
   Future<void> _fetchBlogs() async {
@@ -32,16 +38,15 @@ class _BlogPageState extends State<BlogPage> {
 
   Future<void> _toggleLike(String blogId, bool isLiked) async {
     try {
+      print('Toggling like for $blogId, isLiked: $isLiked');
       if (isLiked) {
-        // Unlike the blog
         context.read<BlogBloc>().add(BlogUnlike(blogId: blogId));
       } else {
-        // Like the blog
         context.read<BlogBloc>().add(BlogLike(blogId: blogId));
       }
-      setState(() {
-        _likedBlogs[blogId] = !isLiked;
-      });
+
+      // Update local storage
+      _likesBox.put(blogId, !isLiked);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
@@ -74,8 +79,6 @@ class _BlogPageState extends State<BlogPage> {
             if (state is BlogFailure) {
               showSnackBar(context, state.error, isError: true);
             } else if (state is BlogLikeSuccess || state is BlogUnlikeSuccess) {
-              _fetchBlogs();
-
               showSnackBar(context, "Success!");
             }
           },
@@ -84,21 +87,34 @@ class _BlogPageState extends State<BlogPage> {
               return const Loader();
             }
             if (state is BlogsDisplaySuccess) {
+              if (state.blogs.isEmpty) {
+                return Center(child: Text('No blogs available'));
+              }
+
               return RefreshIndicator(
                 onRefresh: _fetchBlogs,
                 child: ListView.builder(
                   itemCount: state.blogs.length,
                   itemBuilder: (context, index) {
                     final blog = state.blogs[index];
-                    final isLiked = _likedBlogs[blog.id] ?? false;
+                    final isLiked =
+                        _likesBox.get(blog.id, defaultValue: false) ?? false;
+                    final updatedLikesCount = isLiked
+                        ? (blog.likes_count ?? 0) + 1
+                        : (blog.likes_count ?? 0);
+
                     return BlogCard(
                       key: ValueKey(blog.id),
-                      blog: blog,
+                      blog: blog.copyWith(likes_count: updatedLikesCount),
                       color: index % 2 == 0
                           ? AppPallete.gradient1
                           : AppPallete.gradient2,
                       isLiked: isLiked,
-                      onToggleLike: () => _toggleLike(blog.id, isLiked),
+                      onToggleLike: () async {
+                        await _toggleLike(blog.id, isLiked);
+                        setState(
+                            () {}); // Refresh UI after updating like status
+                      },
                     );
                   },
                 ),
@@ -112,3 +128,4 @@ class _BlogPageState extends State<BlogPage> {
     );
   }
 }
+

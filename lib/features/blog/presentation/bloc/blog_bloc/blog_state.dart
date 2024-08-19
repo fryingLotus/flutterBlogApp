@@ -18,9 +18,17 @@ final class BlogUpdateSuccess extends BlogState {}
 
 final class BlogDeleteSuccess extends BlogState {}
 
-final class BlogLikeSuccess extends BlogState {}
+final class BlogLikeSuccess extends BlogState {
+  final String blogId;
 
-final class BlogUnlikeSuccess extends BlogState {}
+  BlogLikeSuccess(this.blogId);
+}
+
+final class BlogUnlikeSuccess extends BlogState {
+  final String blogId;
+
+  BlogUnlikeSuccess(this.blogId);
+}
 
 final class BlogsDisplaySuccess extends BlogState {
   final List<Blog> blogs;

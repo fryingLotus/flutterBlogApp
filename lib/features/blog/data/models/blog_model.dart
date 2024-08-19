@@ -1,5 +1,3 @@
-// ignore_for_file: non_constant_identifier_names
-
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 
 class BlogModel extends Blog {
@@ -12,7 +10,9 @@ class BlogModel extends Blog {
       required super.topics,
       required super.updatedAt,
       super.posterName,
-      super.likes_count});
+      super.likes_count,
+      bool isLiked = false}) // Default to false
+      : super(isLiked: isLiked); // Pass to super class
 
   factory BlogModel.fromJson(Map<String, dynamic> map) {
     return BlogModel(
@@ -25,12 +25,11 @@ class BlogModel extends Blog {
       updatedAt: map['updated_at'] == null
           ? DateTime.now()
           : DateTime.parse(map['updated_at']),
-      likes_count: map['likes_count'] != null
-          ? map['likes_count'] as int
-          : 0, // Handle null safely
+      likes_count: map['likes_count'] != null ? map['likes_count'] as int : 0,
     );
   }
 
+  @override
   BlogModel copyWith({
     String? id,
     String? posterId,
@@ -40,21 +39,24 @@ class BlogModel extends Blog {
     List<String>? topics,
     DateTime? updatedAt,
     String? posterName,
-    // ignore: non_constant_identifier_names
     int? likes_count,
+    bool? isLiked, // Keep isLiked for local state management
   }) {
     return BlogModel(
-        id: id ?? this.id,
-        posterId: posterId ?? this.posterId,
-        title: title ?? this.title,
-        content: content ?? this.content,
-        imageUrl: imageUrl ?? this.imageUrl,
-        topics: topics ?? this.topics,
-        updatedAt: updatedAt ?? this.updatedAt,
-        posterName: posterName ?? this.posterName,
-        likes_count: likes_count ?? this.likes_count);
+      id: id ?? this.id,
+      posterId: posterId ?? this.posterId,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      imageUrl: imageUrl ?? this.imageUrl,
+      topics: topics ?? this.topics,
+      updatedAt: updatedAt ?? this.updatedAt,
+      posterName: posterName ?? this.posterName,
+      likes_count: likes_count ?? this.likes_count,
+      isLiked: isLiked ?? this.isLiked, // Only managed locally
+    );
   }
 
+  // No need to include isLiked in toJson since it is not part of the backend data
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'id': id,
@@ -64,7 +66,8 @@ class BlogModel extends Blog {
       'image_url': imageUrl,
       'topics': topics,
       'updated_at': updatedAt.toIso8601String(),
-      'likes_count': likes_count
+      'likes_count': likes_count,
     };
   }
 }
+

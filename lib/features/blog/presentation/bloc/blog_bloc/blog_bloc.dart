@@ -23,6 +23,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final UpdateBlog _updateBlog;
   final LikeBlog _likeBlog;
   final UnlikeBlog _unlikeBlog;
+  List<Blog>? _blogs;
   BlogBloc({
     required UploadBlog uploadBlog,
     required GetAllBlogs getAllBlogs,
@@ -39,7 +40,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
         _updateBlog = updateBlog,
         _unlikeBlog = unlikeBlog,
         super(BlogInitial()) {
-    on<BlogEvent>((event, emit) => emit(BlogLoading()));
+    //on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
     on<BlogFetchAllBlogs>(_onFetchAllBlog);
     on<BlogFetchUserBlogs>(_onFetchUserBlog);
@@ -52,6 +53,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     BlogUpload event,
     Emitter<BlogState> emit,
   ) async {
+    emit(BlogLoading());
     final res = await _uploadBlog(
       UploadBlogParams(
         posterId: event.posterId,
@@ -73,15 +75,12 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   }
 
   void _onFetchAllBlog(BlogFetchAllBlogs event, Emitter<BlogState> emit) async {
+    emit(BlogLoading());
     final res = await _getAllBlogs(NoParams());
     res.fold(
       (l) => emit(BlogFailure(l.message)),
       (r) {
-        // Print all fetched blogs for debugging
-        print('Fetched All Blogs:');
-        for (var blog in r) {
-          print('Blog ID: ${blog.id}, Title: ${blog.title}');
-        }
+        _blogs = r; // Store blogs locally
         emit(BlogsDisplaySuccess(r));
       },
     );
@@ -89,6 +88,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
 
   void _onFetchUserBlog(
       BlogFetchUserBlogs event, Emitter<BlogState> emit) async {
+    emit(BlogLoading());
     final res = await _getUserBlogs(NoParams());
     res.fold(
       (l) => emit(BlogFailure(l.message)),
@@ -104,6 +104,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   }
 
   void _onDeleteBlog(BlogDelete event, Emitter<BlogState> emit) async {
+    emit(BlogLoading());
     print('Deleting blog with ID: ${event.blogId}');
 
     final res = await _deleteBlog(DeleteBlogParams(blogId: event.blogId));
@@ -123,12 +124,13 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     final res = await _likeBlog(LikeBlogParams(blogId: event.blogId));
     res.fold(
       (l) {
-        print('like failed: ${l.message}');
         emit(BlogFailure(l.message));
       },
       (r) {
-        print('Blog like successfully.');
-        emit(BlogLikeSuccess());
+        _updateLikeStatus(event.blogId, true);
+        emit(BlogLikeSuccess(event.blogId));
+        emit(BlogsDisplaySuccess(
+            _blogs!)); // Re-emit the blogs with updated like status
       },
     );
   }
@@ -137,17 +139,30 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     final res = await _unlikeBlog(UnlikeBlogParams(blogId: event.blogId));
     res.fold(
       (l) {
-        print('unlike failed: ${l.message}');
         emit(BlogFailure(l.message));
       },
       (r) {
-        print('Blog unlike successfully.');
-        emit(BlogUnlikeSuccess());
+        _updateLikeStatus(event.blogId, false);
+        emit(BlogUnlikeSuccess(event.blogId));
+        emit(BlogsDisplaySuccess(
+            _blogs!)); // Re-emit the blogs with updated unlike status
       },
     );
   }
 
+  // Helper method to update the like status of a blog locally
+  void _updateLikeStatus(String blogId, bool isLiked) {
+    _blogs = _blogs?.map((blog) {
+      if (blog.id == blogId) {
+        return blog.copyWith(
+            isLiked: isLiked); // Ensure your Blog entity has a copyWith method
+      }
+      return blog;
+    }).toList();
+  }
+
   void _onUpdateBlog(BlogUpdate event, Emitter<BlogState> emit) async {
+    emit(BlogLoading());
     // Log the incoming event details
     print('Updating blog: ${event.blogId}');
     print('Poster ID: ${event.posterId}');
