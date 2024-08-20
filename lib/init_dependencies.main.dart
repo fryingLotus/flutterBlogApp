@@ -112,10 +112,14 @@ void _initComment() {
     )
     ..registerFactory(() => DeleteComment(serviceLocator()))
     ..registerFactory(() => UpdateComment(serviceLocator()))
+    ..registerFactory(() => LikeComment(serviceLocator()))
+    ..registerFactory(() => UnlikeComment(serviceLocator()))
     // Bloc
     ..registerLazySingleton(() => CommentBloc(
         uploadComment: serviceLocator(),
         getCommentsForBlog: serviceLocator(),
         deleteComment: serviceLocator(),
-        updateComment: serviceLocator()));
+        updateComment: serviceLocator(),
+        likeComment: serviceLocator(),
+        unlikeComment: serviceLocator()));
 }

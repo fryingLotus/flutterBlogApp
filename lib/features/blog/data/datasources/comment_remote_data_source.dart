@@ -9,6 +9,9 @@ abstract interface class CommentRemoteDataSource {
   Future<void> deleteComment(String commentId);
   Future<CommentModel> updateComment(CommentModel comment);
   Future<CommentModel> getCommentById(String commentId);
+
+  Future<void> likeComment(String commentId);
+  Future<void> unlikeComment(String commentId);
 }
 
 class CommentRemoteDataSourceImpl implements CommentRemoteDataSource {
@@ -94,6 +97,40 @@ class CommentRemoteDataSourceImpl implements CommentRemoteDataSource {
           .single();
 
       return CommentModel.fromJson(commentData);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> likeComment(String commentId) async {
+    try {
+      final userId = supabaseClient.auth.currentUser?.id;
+
+      await supabaseClient.rpc('like_blog_or_comment', params: {
+        'p_poster_id': userId,
+        'p_blog_id': null,
+        'p_comment_id': commentId,
+      });
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> unlikeComment(String commentId) async {
+    try {
+      final userId = supabaseClient.auth.currentUser?.id;
+
+      await supabaseClient.rpc('unlike_blog_or_comment', params: {
+        'p_poster_id': userId,
+        'p_blog_id': null,
+        'p_comment_id': commentId,
+      });
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

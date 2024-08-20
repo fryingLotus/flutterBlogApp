@@ -24,4 +24,7 @@ abstract interface class CommentRepository {
   Future<Either<Failures, Comment>> getCommentById({
     required String commentId,
   });
+
+  Future<Either<Failures, bool>> likeComment(String commentId);
+  Future<Either<Failures, bool>> unlikeComment(String commentId);
 }

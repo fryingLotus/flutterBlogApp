@@ -36,3 +36,15 @@ final class CommentUpdate extends CommentEvent {
 
   CommentUpdate({required this.commentId, required this.content});
 }
+
+final class CommentLike extends CommentEvent {
+  final String commentId;
+
+  CommentLike({required this.commentId});
+}
+final class CommentUnlike extends CommentEvent {
+  final String commentId;
+
+  CommentUnlike({required this.commentId});
+}
+

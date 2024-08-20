@@ -1,16 +1,20 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:blogapp/features/blog/domain/entities/comment.dart';
 
 class CommentModel extends Comment {
-  CommentModel({
-    required super.id,
-    required super.posterId,
-    required super.blogId,
-    required super.content,
-    required super.createdAt,
-    required super.updatedAt,
-    super.posterAvatar,
-    super.posterName,
-  });
+  CommentModel(
+      {required super.id,
+      required super.posterId,
+      required super.blogId,
+      required super.content,
+      required super.createdAt,
+      required super.updatedAt,
+      super.posterAvatar,
+      super.posterName,
+      super.likes_count,
+      bool isLiked = false}) // Default to false
+      : super(isLiked: isLiked); // Pass to super class
 
   factory CommentModel.fromJson(Map<String, dynamic> map) {
     return CommentModel(
@@ -22,6 +26,7 @@ class CommentModel extends Comment {
       updatedAt: map['updated_at'] == null
           ? DateTime.now()
           : DateTime.parse(map['updated_at']),
+      likes_count: map['likes_count'] != null ? map['likes_count'] as int : 0,
     );
   }
   factory CommentModel.fromComment(Comment comment) {
@@ -46,6 +51,8 @@ class CommentModel extends Comment {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? posterName,
+    int? likes_count,
+    bool? isLiked, // Keep isLiked for local state management
   }) {
     return CommentModel(
       id: id ?? this.id,
@@ -56,6 +63,8 @@ class CommentModel extends Comment {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       posterName: posterName ?? this.posterName,
+      likes_count: likes_count ?? this.likes_count,
+      isLiked: isLiked ?? this.isLiked, // Only managed locally
     );
   }
 
@@ -67,6 +76,7 @@ class CommentModel extends Comment {
       'content': content,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'likes_count': likes_count,
     };
   }
 }

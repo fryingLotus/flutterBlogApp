@@ -106,4 +106,24 @@ class CommentRepositoryImpl implements CommentRepository {
       return left(Failures(e.message));
     }
   }
+
+  @override
+  Future<Either<Failures, bool>> likeComment(String commentId) async {
+    try {
+      await commentRemoteDataSource.likeComment(commentId);
+      return right(true);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failures, bool>> unlikeComment(String commentId) async {
+    try {
+      await commentRemoteDataSource.unlikeComment(commentId);
+      return right(true);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    }
+  }
 }

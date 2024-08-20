@@ -35,3 +35,15 @@ final class CommentLoadingMore extends CommentState {
 final class CommentDeleteSuccess extends CommentState {}
 
 final class CommentUpdateSuccess extends CommentState {}
+
+final class CommentLikeSuccess extends CommentState {
+  final String commentId;
+
+  CommentLikeSuccess({required this.commentId});
+}
+
+final class CommentUnlikeSuccess extends CommentState {
+  final String commentId;
+
+  CommentUnlikeSuccess({required this.commentId});
+}
