@@ -1,5 +1,6 @@
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
+import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/widgets/auth_field.dart';
 import 'package:blogapp/features/auth/presentation/widgets/auth_gradient_button.dart';
 import 'package:flutter/material.dart';
@@ -17,25 +18,26 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   late TextEditingController _userNameController;
   late TextEditingController _userEmailController;
-  final TextEditingController _oldPasswordController = TextEditingController();
-  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final userName =
-        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.name;
-    final userEmail =
-        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.email;
-
-    _userNameController = TextEditingController(text: userName);
-    _userEmailController = TextEditingController(text: userEmail);
+    final state = context.read<AppUserCubit>().state;
+    if (state is AppUserLoggedIn) {
+      _userNameController = TextEditingController(text: state.user.name);
+      _userEmailController = TextEditingController(text: state.user.email);
+    } else {
+      _userNameController = TextEditingController();
+      _userEmailController = TextEditingController();
+    }
   }
 
   @override
   void dispose() {
     _userNameController.dispose();
     _userEmailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -46,102 +48,106 @@ class _AccountPageState extends State<AccountPage> {
         title: const Text("My Account"),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Username",
-              style: TextStyle(
-                  fontSize: 20,
-                  color: AppPallete.gradient2,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            AuthField(
-              hintText: "Enter your username",
-              controller: _userNameController,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "Email",
-              style: TextStyle(
-                  fontSize: 20,
-                  color: AppPallete.gradient2,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            AuthField(
-              hintText: "Enter your email",
-              controller: _userEmailController,
-            ),
-            //const Text(
-            //  "Old Password",
-            //  style: TextStyle(
-            //      fontSize: 20,
-            //      color: AppPallete.gradient2,
-            //      fontWeight: FontWeight.bold),
-            //),
+      body: BlocConsumer<AppUserCubit, AppUserState>(
+        listener: (context, state) {
+          if (state is AppUserUpdateError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to update user: ${state.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else if (state is AppUserLoggedIn) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('User updated successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is AppUserLoading) {
+            return Center(child: CircularProgressIndicator());
+          }
 
-            const SizedBox(height: 16),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Old Password",
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: AppPallete.gradient2,
-                      fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  "New Password",
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: AppPallete.gradient2,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+          if (state is AppUserLoggedIn) {
+            _userNameController.text = state.user.name;
+            _userEmailController.text = state.user.email;
+          }
 
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: AuthField(
-                    hintText: "Enter your old password",
-                    controller: _oldPasswordController,
-                    obscureText: true,
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Username",
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                Expanded(
-                  child: AuthField(
+                  const SizedBox(height: 16),
+                  AuthField(
+                    hintText: "Enter your username",
+                    controller: _userNameController,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Email",
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  AuthField(
+                    hintText: "Enter your email",
+                    controller: _userEmailController,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Change password",
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  AuthField(
                     hintText: "Enter your new password",
-                    controller: _newPasswordController,
+                    controller: _passwordController,
                     obscureText: true,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 30),
+                  Center(
+                    child: AuthGradientButton(
+                      text: 'Save Changes',
+                      onPressed: () {
+                        // Dispatch the AuthUpdate event
+                        context.read<AuthBloc>().add(
+                              AuthUpdate(
+                                name: _userNameController.text.isNotEmpty
+                                    ? _userNameController.text
+                                    : null,
+                                email: _userEmailController.text.isNotEmpty
+                                    ? _userEmailController.text
+                                    : null,
+                                password: _passwordController.text.isNotEmpty
+                                    ? _passwordController.text
+                                    : null,
+                              ),
+                            );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-            //const Text(
-            //  "New Password",
-            //  style: TextStyle(
-            //      fontSize: 20,
-            //      color: AppPallete.gradient2,
-            //      fontWeight: FontWeight.bold),
-            //),
-            const SizedBox(height: 30),
-            Center(
-              child: AuthGradientButton(
-                  text: 'Save Changes', onPressed: () => print("tap!")),
-            )
-          ],
-        ),
+          );
+        },
       ),
     );
   }

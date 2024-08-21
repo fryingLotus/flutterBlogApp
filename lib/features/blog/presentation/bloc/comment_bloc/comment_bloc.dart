@@ -39,8 +39,8 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
     on<CommentFetchAllForBlog>(_onGetCommentsForBlog);
     on<CommentDelete>(_onDeleteComment);
     on<CommentUpdate>(_onUpdateComment);
-    on<CommentLike>(_onLikeComment); // Added missing handler
-    on<CommentUnlike>(_onUnlikeComment); // Added missing handler
+    on<CommentLike>(_onLikeComment);
+    on<CommentUnlike>(_onUnlikeComment);
   }
 
   void _onCommentUpload(CommentUpload event, Emitter<CommentState> emit) async {
@@ -63,11 +63,9 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
   void _onGetCommentsForBlog(
       CommentFetchAllForBlog event, Emitter<CommentState> emit) async {
     if (state is CommentsDisplaySuccess && event.page > 1) {
-      // Loading more comments for pagination
       emit(CommentLoadingMore(
           comments: (state as CommentsDisplaySuccess).comments));
     } else {
-      // Loading initial comments
       emit(CommentLoading());
     }
 
@@ -83,7 +81,6 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
       (failure) => emit(CommentFailure(failure.message)),
       (newComments) {
         if (state is CommentsDisplaySuccess && event.page > 1) {
-          // Appending new comments to the existing list
           final currentState = state as CommentsDisplaySuccess;
           final allComments = List<Comment>.from(currentState.comments)
             ..addAll(newComments);
@@ -92,7 +89,7 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
             hasMore: newComments.length == event.pageSize,
           ));
         } else {
-          // Displaying the first page of comments
+          _comments = newComments; // Store the comments
           emit(CommentsDisplaySuccess(
             comments: newComments,
             hasMore: newComments.length == event.pageSize,
@@ -162,7 +159,9 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
   void _updateLikeStatus(String commentId, bool isLiked) {
     _comments = _comments?.map((comment) {
       if (comment.id == commentId) {
-        return comment.copyWith(isLiked: isLiked);
+        return comment.copyWith(
+          isLiked: isLiked,
+        );
       }
       return comment;
     }).toList();

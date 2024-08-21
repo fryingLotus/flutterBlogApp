@@ -37,13 +37,15 @@ void _initAuth() {
     ..registerFactory(() => UserLogin(serviceLocator()))
     ..registerFactory(() => CurrentUser(serviceLocator()))
     ..registerFactory(() => UserLogout(serviceLocator()))
+    ..registerFactory(() => UpdateUser(serviceLocator()))
     // Bloc
     ..registerLazySingleton(() => AuthBloc(
         userSignUp: serviceLocator(),
         userLogin: serviceLocator(),
         currentUser: serviceLocator(),
         appUserCubit: serviceLocator(),
-        userLogout: serviceLocator()));
+        userLogout: serviceLocator(),
+        updateUser: serviceLocator()));
 }
 
 void _initBlog() {

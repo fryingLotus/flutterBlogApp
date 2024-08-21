@@ -18,7 +18,16 @@ final class AuthLogin extends AuthEvent {
   AuthLogin({required this.email, required this.password});
 }
 
+class AuthUpdate extends AuthEvent {
+  final String? name;
+  final String? email;
+  final String? password;
+
+  AuthUpdate({this.name, this.email, this.password});
+}
+
 final class AuthIsUserLoggedIn extends AuthEvent {}
 
 final class AuthLogout extends AuthEvent {}
-final class AuthLoggedOut extends AuthState {} 
+
+final class AuthLoggedOut extends AuthState {}

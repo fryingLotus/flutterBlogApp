@@ -2,6 +2,7 @@ import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
+import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_login.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_logout.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_sign_up.dart';
@@ -17,23 +18,27 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CurrentUser _currentUser;
   final UserLogout _userLogout;
   final AppUserCubit _appUserCubit;
+  final UpdateUser _updateUser;
 
   AuthBloc(
       {required UserSignUp userSignUp,
       required UserLogin userLogin,
       required CurrentUser currentUser,
       required AppUserCubit appUserCubit,
-      required UserLogout userLogout})
+      required UserLogout userLogout,
+      required UpdateUser updateUser})
       : _userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
         _appUserCubit = appUserCubit,
         _userLogout = userLogout,
+        _updateUser = updateUser,
         super(AuthInitial()) {
     on<AuthSignUp>(_onAuthSignUp);
     on<AuthLogin>(_onAuthLogin);
     on<AuthIsUserLoggedIn>(_isUserLoggedIn);
     on<AuthLogout>(_onAuthLogout);
+    on<AuthUpdate>(_onAuthUpdate);
   }
   void _onAuthSignUp(AuthSignUp event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
@@ -90,6 +95,32 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_) {
         emit(AuthLoggedOut()); // Emit logged out state
         _appUserCubit.logout(); // Call logout method
+      },
+    );
+  }
+
+  void _onAuthUpdate(AuthUpdate event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+
+    print("AuthUpdate event triggered:");
+    print("Name: ${event.name}");
+    print("Email: ${event.email}");
+    print("Password: ${event.password}");
+
+    final response = await _updateUser(UpdateUserParams(
+      email: event.email,
+      password: event.password,
+      name: event.name,
+    ));
+
+    response.fold(
+      (failure) {
+        print("Update failed: ${failure.message}");
+        emit(AuthFailure(failure.message));
+      },
+      (user) {
+        print("Update successful: User ${user.name} updated");
+        _emitAuthSuccess(user, emit);
       },
     );
   }

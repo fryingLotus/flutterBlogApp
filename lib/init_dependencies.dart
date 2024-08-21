@@ -6,6 +6,7 @@ import 'package:blogapp/features/auth/data/datasources/auth_remote_data_source.d
 import 'package:blogapp/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:blogapp/features/auth/domain/repository/auth_repository.dart';
 import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
+import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_login.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_logout.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_sign_up.dart';

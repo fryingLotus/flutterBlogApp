@@ -15,6 +15,7 @@ abstract interface class AuthRemoteDataSource {
   });
   Future<UserModel?> getCurrentUserData();
   Future<void> logout();
+  Future<UserModel> updateUser({ String? name, String? email,String? password});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -94,4 +95,46 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException(e.toString());
     };
   }
+
+ @override
+Future<UserModel> updateUser({
+  String? name,  
+  String? email, 
+  String? password,
+}) async {
+  try {
+    
+    final Map<String, dynamic> data = {};
+
+    if (name != null) data['name'] = name;
+    if (email != null) data['email'] = email;
+    if (password != null) data['password'] = password;
+
+   
+    if (data.isEmpty) {
+      throw const ServerException('No fields provided to update!');
+    }
+
+   
+    final attributes = UserAttributes(
+      data: name != null ? {'name': name} : null,
+      email: email,
+      password: password,
+    );
+
+   
+    final response = await supabaseClient.auth.updateUser(attributes);
+
+    if (response.user == null) {
+      throw const ServerException('User is null!');
+    }
+
+   
+    return UserModel.fromJson(response.user!.toJson());
+  } on AuthException catch (e) {
+    throw ServerException(e.message);
+  } catch (e) {
+    throw ServerException(e.toString());
+  }
+}
 }

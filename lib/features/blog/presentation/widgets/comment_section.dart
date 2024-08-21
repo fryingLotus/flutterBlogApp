@@ -56,14 +56,30 @@ class _CommentSectionState extends State<CommentSection> {
 
   Future<void> _toggleLike(String commentId, bool isLiked) async {
     try {
+      // Toggle the like state
       if (isLiked) {
         context.read<CommentBloc>().add(CommentUnlike(commentId: commentId));
-        _comments.clear();
       } else {
         context.read<CommentBloc>().add(CommentLike(commentId: commentId));
-        _comments.clear();
       }
+
+      // Update the local likes state
       _likesBox.put(commentId, !isLiked);
+
+      // Update the specific comment's likes in the local _comments list
+      setState(() {
+        final commentIndex =
+            _comments.indexWhere((comment) => comment.id == commentId);
+        if (commentIndex != -1) {
+          final updatedComment = _comments[commentIndex].copyWith(
+            likes_count: isLiked
+                ? (_comments[commentIndex].likes_count ?? 0) - 1
+                : (_comments[commentIndex].likes_count ?? 0) + 1,
+          );
+          _comments[commentIndex] = updatedComment;
+        }
+
+      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
@@ -89,7 +105,6 @@ class _CommentSectionState extends State<CommentSection> {
           showSnackBar(context, 'Action completed successfully');
         } else if (state is CommentLikeSuccess ||
             state is CommentUnlikeSuccess) {
-          _fetchComments();
           showSnackBar(context, "Success!");
         } else if (state is CommentFailure) {
           showSnackBar(context, state.error, isError: true);
@@ -266,6 +281,14 @@ class _CommentSectionState extends State<CommentSection> {
 
   void _fetchComments({bool fetchPrevious = false}) {
     if (fetchPrevious && _currentPage <= 0) return;
+
+    if (_currentPage == 1 && !_isLoadingMore) {
+      // Clear the list only when fetching the first page (initial load or refresh)
+      setState(() {
+        _comments.clear();
+      });
+    }
+
     context.read<CommentBloc>().add(
           CommentFetchAllForBlog(
             blogId: widget.blogId,
@@ -284,5 +307,6 @@ class _CommentSectionState extends State<CommentSection> {
           posterId: posterId,
         ));
     _contentController.clear();
+    _comments.clear();
   }
 }
