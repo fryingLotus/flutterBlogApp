@@ -15,7 +15,9 @@ abstract interface class AuthRemoteDataSource {
   });
   Future<UserModel?> getCurrentUserData();
   Future<void> logout();
-  Future<UserModel> updateUser({ String? name, String? email,String? password});
+  Future<UserModel> updateUser({String? name, String? email, String? password});
+  Future<void> resendVerificationEmail({required String email});
+  Future<bool> checkEmailVerified();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -26,17 +28,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Session? get currentUserSession => supabaseClient.auth.currentSession;
   @override
-  Future<UserModel> loginWithEmailPassword(
-      {required String email, required String password}) async {
+  Future<UserModel> loginWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
     try {
       final response = await supabaseClient.auth.signInWithPassword(
         password: password,
         email: email,
       );
-      if (response.user == null) {
+
+      final user = response.user;
+
+      if (user == null) {
         throw const ServerException('User is null!');
       }
-      return UserModel.fromJson(response.user!.toJson());
+
+      if (user.emailConfirmedAt == null) {
+        throw const ServerException('Please verify your email first.');
+      }
+
+      return UserModel.fromJson(user.toJson());
     } on AuthException catch (e) {
       throw ServerException(e.message);
     } catch (e) {
@@ -96,45 +108,78 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     };
   }
 
- @override
-Future<UserModel> updateUser({
-  String? name,  
-  String? email, 
-  String? password,
-}) async {
-  try {
-    
-    final Map<String, dynamic> data = {};
+  @override
+  Future<UserModel> updateUser({
+    String? name,
+    String? email,
+    String? password,
+  }) async {
+    try {
+      final currentUserData = await getCurrentUserData();
+      if (currentUserData == null) {
+        throw const ServerException('No user data available!');
+      }
 
-    if (name != null) data['name'] = name;
-    if (email != null) data['email'] = email;
-    if (password != null) data['password'] = password;
+      // Prepare the updated fields
+      String updatedName = name ?? currentUserData.name;
+      String updatedEmail = email ?? currentUserData.email;
 
-   
-    if (data.isEmpty) {
-      throw const ServerException('No fields provided to update!');
+      // Update the user's profile in the 'profiles' table if the name is provided
+      if (name != null) {
+        await supabaseClient
+            .from('profiles')
+            .update({'name': updatedName}).eq('id', currentUserData.id);
+      }
+
+      // Update email and/or password using the Supabase Auth API if provided
+      UserAttributes? attributes;
+      if (email != null || password != null) {
+        attributes = UserAttributes(
+          email: email != null ? updatedEmail : null,
+          password: password != null && password.isNotEmpty ? password : null,
+        );
+      }
+
+      if (attributes != null) {
+        final response = await supabaseClient.auth.updateUser(attributes);
+        if (response.user == null) {
+          throw const ServerException('User is null after update!');
+        }
+      }
+
+      // Return updated UserModel
+      return currentUserData.copyWith(
+        name: updatedName,
+        email: updatedEmail,
+      );
+    } on AuthException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
     }
-
-   
-    final attributes = UserAttributes(
-      data: name != null ? {'name': name} : null,
-      email: email,
-      password: password,
-    );
-
-   
-    final response = await supabaseClient.auth.updateUser(attributes);
-
-    if (response.user == null) {
-      throw const ServerException('User is null!');
-    }
-
-   
-    return UserModel.fromJson(response.user!.toJson());
-  } on AuthException catch (e) {
-    throw ServerException(e.message);
-  } catch (e) {
-    throw ServerException(e.toString());
   }
-}
+
+  @override
+  Future<void> resendVerificationEmail({required String email}) async {
+    try {
+      final ResendResponse response = await supabaseClient.auth.resend(
+          type: OtpType.email, // Indicates that this is for email verification
+          email: email,
+          emailRedirectTo: 'io.supabase.flutterquickstart://login-callback/');
+    } on AuthException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<bool> checkEmailVerified() async {
+    final user = supabaseClient.auth.currentUser;
+    if (user != null) {
+      // Check if emailConfirmedAt is not null
+      return user.emailConfirmedAt != null;
+    }
+    return false;
+  }
 }

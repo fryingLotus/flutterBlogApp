@@ -18,3 +18,12 @@ final class AuthFailure extends AuthState {
   final String message;
   const AuthFailure(this.message);
 }
+
+final class AuthSuccessMessage extends AuthState {
+  final String message;
+  const AuthSuccessMessage(this.message);
+}
+
+final class AuthEmailVerifiedSuccess extends AuthState {}
+
+final class AuthEmailNotVerified extends AuthState {}

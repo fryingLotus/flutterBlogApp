@@ -31,3 +31,11 @@ final class AuthIsUserLoggedIn extends AuthEvent {}
 final class AuthLogout extends AuthEvent {}
 
 final class AuthLoggedOut extends AuthState {}
+
+class AuthResendVerificationEmail extends AuthEvent {
+  final String email;
+
+  AuthResendVerificationEmail({required this.email});
+}
+
+class AuthCheckEmailVerified extends AuthEvent {}

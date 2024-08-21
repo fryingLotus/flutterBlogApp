@@ -84,4 +84,28 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     });
   }
+
+  @override
+  Future<Either<Failures, bool>> checkEmailVerified() async {
+    try {
+      final isVerified = await remoteDataSource.checkEmailVerified();
+      return right(isVerified);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failures, void>> resendVerificationEmail({
+    required String email,
+  }) async {
+    try {
+      await remoteDataSource.resendVerificationEmail(email: email);
+      return right(unit); // Right indicates success with no data to return
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

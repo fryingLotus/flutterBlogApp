@@ -16,4 +16,8 @@ abstract interface class AuthRepository {
   Future<Either<Failures, void>> logout();
   Future<Either<Failures, User>> updateUser(
       {String? email, String? name, String? password});
+
+  Future<Either<Failures, void>> resendVerificationEmail(
+      {required String email});
+  Future<Either<Failures, bool>> checkEmailVerified();
 }
