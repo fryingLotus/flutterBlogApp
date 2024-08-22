@@ -7,7 +7,7 @@ Future<void> initDependencies() async {
   _initBlog();
   _initComment();
   final supabase = await Supabase.initialize(
-      url: AppSecrets.supabaseUrl, anonKey: AppSecrets.supabaseAnonKey);
+      url: AppSecrets.supabaseUrl, anonKey: AppSecrets.supabaseAnonKey,);
 
   Hive.defaultDirectory = (await getApplicationDocumentsDirectory()).path;
   serviceLocator.registerLazySingleton(() => supabase.client);

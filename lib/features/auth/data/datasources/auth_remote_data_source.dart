@@ -173,13 +173,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
-  @override
-  Future<bool> checkEmailVerified() async {
-    final user = supabaseClient.auth.currentUser;
+ @override
+Future<bool> checkEmailVerified() async {
+  try {
+    // Refresh session to get the most recent data
+    final response = await supabaseClient.auth.refreshSession();
+    final user = response.user;
+
     if (user != null) {
       // Check if emailConfirmedAt is not null
       return user.emailConfirmedAt != null;
     }
-    return false;
+  } catch (e) {
+    throw ServerException(e.toString());
   }
+
+  return false;
+}
 }

@@ -1,5 +1,6 @@
 import 'package:blogapp/core/common/cubits/app_theme/theme_cubit.dart'; // Import the ThemeCubit
 import 'package:blogapp/core/common/cubits/app_theme/theme_state.dart';
+import 'package:blogapp/core/common/widgets/navigation_tile.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/features/auth/presentation/pages/account_page.dart';
 import 'package:flutter/cupertino.dart';
@@ -54,27 +55,10 @@ class SettingsPage extends StatelessWidget {
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () => Navigator.push(context, AccountPage.route()),
-              child: Container(
-                decoration: BoxDecoration(
-                    color: AppPallete.borderColor,
-                    borderRadius: BorderRadius.circular(12)),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
-                margin: const EdgeInsets.only(left: 25, right: 25, top: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Account",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.inversePrimary),
-                    ),
-                  ],
-                ),
-              ),
+          
+            NavigationTile(
+              title: "Account",
+              routeBuilder: (context) => const AccountPage(),
             ),
           ],
         ),
