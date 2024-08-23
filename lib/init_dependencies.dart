@@ -8,6 +8,7 @@ import 'package:blogapp/features/auth/domain/repository/auth_repository.dart';
 import 'package:blogapp/features/auth/domain/usecases/check_email_verified.dart';
 import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/resend_verification_email.dart';
+import 'package:blogapp/features/auth/domain/usecases/update_profile_picture.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_login.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_logout.dart';

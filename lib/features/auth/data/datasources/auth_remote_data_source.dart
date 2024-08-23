@@ -1,23 +1,48 @@
+import 'dart:io';
+
 import 'package:blogapp/core/error/exceptions.dart';
 import 'package:blogapp/features/auth/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract interface class AuthRemoteDataSource {
   Session? get currentUserSession;
+
   Future<UserModel> signUpWithEmailPassword({
     required String name,
     required String email,
     required String password,
   });
+
   Future<UserModel> loginWithEmailPassword({
     required String email,
     required String password,
   });
+
   Future<UserModel?> getCurrentUserData();
+
   Future<void> logout();
-  Future<UserModel> updateUser({String? name, String? email, String? password});
-  Future<void> resendVerificationEmail({required String email});
+
+  Future<UserModel> updateUser({
+    String? name,
+    String? email,
+    String? password,
+  });
+
+  Future<void> resendVerificationEmail({
+    required String email,
+  });
+
   Future<bool> checkEmailVerified();
+
+  // New methods
+  Future<UserModel> updateProfilePicture({
+    required String avatarUrl,
+  });
+
+  Future<String> uploadAvatarImage({
+    required File image,
+    required UserModel user,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -27,6 +52,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Session? get currentUserSession => supabaseClient.auth.currentSession;
+
+  @override
+  Future<UserModel> signUpWithEmailPassword({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await supabaseClient.auth.signUp(
+        email: email,
+        password: password,
+        data: {'name': name},
+      );
+
+      if (response.user == null) {
+        throw const ServerException('User is null!');
+      }
+
+      return UserModel.fromJson(response.user!.toJson());
+    } on AuthException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
   @override
   Future<UserModel> loginWithEmailPassword({
     required String email,
@@ -34,8 +85,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       final response = await supabaseClient.auth.signInWithPassword(
-        password: password,
         email: email,
+        password: password,
       );
 
       final user = response.user;
@@ -57,35 +108,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<UserModel> signUpWithEmailPassword(
-      {required String name,
-      required String email,
-      required String password}) async {
-    try {
-      final response = await supabaseClient.auth
-          .signUp(password: password, email: email, data: {
-        'name': name,
-      });
-      if (response.user == null) {
-        throw const ServerException('User is null!');
-      }
-      return UserModel.fromJson(response.user!.toJson());
-    } on AuthException catch (e) {
-      throw ServerException(e.message);
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
   Future<UserModel?> getCurrentUserData() async {
     try {
       if (currentUserSession != null) {
         final userData = await supabaseClient
             .from('profiles')
-            .select('id,name')
-            .eq('id', currentUserSession!.user.id);
-        return UserModel.fromJson(userData.first)
+            .select('id,name,avatar_url')
+            .eq('id', currentUserSession!.user.id)
+            .single();
+
+        return UserModel.fromJson(userData)
             .copyWith(email: currentUserSession!.user.email);
       }
     } catch (e) {
@@ -102,10 +134,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } on AuthException catch (e) {
       throw ServerException(e.message);
-    }
-    (e) {
+    } catch (e) {
       throw ServerException(e.toString());
-    };
+    }
   }
 
   @override
@@ -120,34 +151,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException('No user data available!');
       }
 
-      // Prepare the updated fields
-      String updatedName = name ?? currentUserData.name;
-      String updatedEmail = email ?? currentUserData.email;
+      final updatedName = name ?? currentUserData.name;
+      final updatedEmail = email ?? currentUserData.email;
 
-      // Update the user's profile in the 'profiles' table if the name is provided
       if (name != null) {
         await supabaseClient
             .from('profiles')
             .update({'name': updatedName}).eq('id', currentUserData.id);
       }
 
-      // Update email and/or password using the Supabase Auth API if provided
-      UserAttributes? attributes;
       if (email != null || password != null) {
-        attributes = UserAttributes(
-          email: email != null ? updatedEmail : null,
-          password: password != null && password.isNotEmpty ? password : null,
+        final attributes = UserAttributes(
+          email: email ?? currentUserData.email,
+          password: password,
         );
-      }
 
-      if (attributes != null) {
         final response = await supabaseClient.auth.updateUser(attributes);
         if (response.user == null) {
           throw const ServerException('User is null after update!');
         }
       }
 
-      // Return updated UserModel
       return currentUserData.copyWith(
         name: updatedName,
         email: updatedEmail,
@@ -160,12 +184,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> resendVerificationEmail({required String email}) async {
+  Future<void> resendVerificationEmail({
+    required String email,
+  }) async {
     try {
-      final ResendResponse response = await supabaseClient.auth.resend(
-          type: OtpType.email, // Indicates that this is for email verification
-          email: email,
-          emailRedirectTo: 'io.supabase.flutterquickstart://login-callback/');
+      await supabaseClient.auth.resend(
+        type: OtpType.email,
+        email: email,
+        emailRedirectTo: 'io.supabase.flutterquickstart://login-callback/',
+      );
     } on AuthException catch (e) {
       throw ServerException(e.message);
     } catch (e) {
@@ -173,21 +200,55 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
- @override
-Future<bool> checkEmailVerified() async {
-  try {
-    // Refresh session to get the most recent data
-    final response = await supabaseClient.auth.refreshSession();
-    final user = response.user;
+  @override
+  Future<bool> checkEmailVerified() async {
+    try {
+      final response = await supabaseClient.auth.refreshSession();
+      final user = response.user;
 
-    if (user != null) {
-      // Check if emailConfirmedAt is not null
-      return user.emailConfirmedAt != null;
+      return user?.emailConfirmedAt != null;
+    } catch (e) {
+      throw ServerException(e.toString());
     }
-  } catch (e) {
-    throw ServerException(e.toString());
   }
 
-  return false;
-}
+  @override
+  Future<String> uploadAvatarImage({
+    required File image,
+    required UserModel user,
+  }) async {
+    try {
+      final uniqueId = '${user.id}_${DateTime.now().millisecondsSinceEpoch}';
+
+      await supabaseClient.storage.from('avatars').upload(uniqueId, image);
+
+      return supabaseClient.storage.from('avatars').getPublicUrl(uniqueId);
+    } on StorageException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<UserModel> updateProfilePicture({
+    required String avatarUrl,
+  }) async {
+    try {
+      final currentUserData = await getCurrentUserData();
+      if (currentUserData == null) {
+        throw const ServerException('No user data available!');
+      }
+
+      await supabaseClient
+          .from('profiles')
+          .update({'avatar_url': avatarUrl}).eq('id', currentUserData.id);
+
+      return currentUserData.copyWith(avatarUrl: avatarUrl);
+    } on AuthException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
 }

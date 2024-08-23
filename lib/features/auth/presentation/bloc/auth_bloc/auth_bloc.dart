@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/features/auth/domain/usecases/check_email_verified.dart';
 import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/resend_verification_email.dart';
+import 'package:blogapp/features/auth/domain/usecases/update_profile_picture.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_login.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_logout.dart';
@@ -23,6 +26,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UpdateUser _updateUser;
   final CheckEmailVerified _checkEmailVerified;
   final ResendVerificationEmail _resendVerificationEmail;
+  final UpdateProfilePicture _updateProfilePicture;
 
   AuthBloc({
     required UserSignUp userSignUp,
@@ -33,6 +37,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required UpdateUser updateUser,
     required CheckEmailVerified checkEmailVerified,
     required ResendVerificationEmail resendVerificationEmail,
+    required UpdateProfilePicture updateProfilePicture,
   })  : _userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
@@ -41,6 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _updateUser = updateUser,
         _checkEmailVerified = checkEmailVerified,
         _resendVerificationEmail = resendVerificationEmail,
+        _updateProfilePicture = updateProfilePicture,
         super(AuthInitial()) {
     on<AuthSignUp>(_onAuthSignUp);
     on<AuthLogin>(_onAuthLogin);
@@ -49,6 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUpdate>(_onAuthUpdate);
     on<AuthCheckEmailVerified>(_onAuthCheckEmailVerified);
     on<AuthResendVerificationEmail>(_onAuthResendVerificationEmail);
+    on<AuthUpdateProfilePicture>(_onAuthUpdateProfilePicture);
   }
   void _onAuthSignUp(AuthSignUp event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
@@ -170,6 +177,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_) {
         emit(const AuthSuccessMessage(
             "Verification email resent")); // Custom state for successful resend
+      },
+    );
+  }
+
+  void _onAuthUpdateProfilePicture(
+      AuthUpdateProfilePicture event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final response = await _updateProfilePicture(
+        UpdateProfilePictureParams(avatarImage: event.avatarImage));
+    response.fold(
+      (failure) {
+        emit(AuthFailure(failure.message));
+      },
+      (user) {
+        _emitAuthSuccess(user, emit);
       },
     );
   }

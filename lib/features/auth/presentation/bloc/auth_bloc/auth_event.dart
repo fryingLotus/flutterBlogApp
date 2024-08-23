@@ -39,3 +39,9 @@ class AuthResendVerificationEmail extends AuthEvent {
 }
 
 class AuthCheckEmailVerified extends AuthEvent {}
+
+class AuthUpdateProfilePicture extends AuthEvent {
+  final File avatarImage;
+
+  AuthUpdateProfilePicture({required this.avatarImage});
+}

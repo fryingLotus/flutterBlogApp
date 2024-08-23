@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:blogapp/core/error/exceptions.dart';
 import 'package:blogapp/core/error/failures.dart';
 import 'package:blogapp/core/network/connection_checker.dart';
@@ -104,6 +106,37 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await remoteDataSource.resendVerificationEmail(email: email);
       return right(unit); // Right indicates success with no data to return
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failures, User>> updateProfilePicture({
+    required File avatarImage,
+  }) async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        throw const ServerException('No internet connection');
+      }
+
+      final currentUser = await remoteDataSource.getCurrentUserData();
+      if (currentUser == null) {
+        return left(Failures('User is not logged in'));
+      }
+
+      final avatarUrl = await remoteDataSource.uploadAvatarImage(
+        image: avatarImage,
+        user: currentUser,
+      );
+
+      final updatedUser = await remoteDataSource.updateProfilePicture(
+        avatarUrl: avatarUrl,
+      );
+
+      return right(updatedUser);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
     } catch (e) {
       return left(Failures(e.toString()));
     }

@@ -7,7 +7,9 @@ Future<void> initDependencies() async {
   _initBlog();
   _initComment();
   final supabase = await Supabase.initialize(
-      url: AppSecrets.supabaseUrl, anonKey: AppSecrets.supabaseAnonKey,);
+    url: AppSecrets.supabaseUrl,
+    anonKey: AppSecrets.supabaseAnonKey,
+  );
 
   Hive.defaultDirectory = (await getApplicationDocumentsDirectory()).path;
   serviceLocator.registerLazySingleton(() => supabase.client);
@@ -40,16 +42,19 @@ void _initAuth() {
     ..registerFactory(() => UpdateUser(serviceLocator()))
     ..registerFactory(() => ResendVerificationEmail(serviceLocator()))
     ..registerFactory(() => CheckEmailVerified(serviceLocator()))
+    ..registerFactory(() => UpdateProfilePicture(serviceLocator()))
     // Bloc
     ..registerLazySingleton(() => AuthBloc(
-        userSignUp: serviceLocator(),
-        userLogin: serviceLocator(),
-        currentUser: serviceLocator(),
-        appUserCubit: serviceLocator(),
-        userLogout: serviceLocator(),
-        updateUser: serviceLocator(),
-        resendVerificationEmail: serviceLocator(),
-        checkEmailVerified: serviceLocator()));
+          userSignUp: serviceLocator(),
+          userLogin: serviceLocator(),
+          currentUser: serviceLocator(),
+          appUserCubit: serviceLocator(),
+          userLogout: serviceLocator(),
+          updateUser: serviceLocator(),
+          resendVerificationEmail: serviceLocator(),
+          checkEmailVerified: serviceLocator(),
+          updateProfilePicture: serviceLocator(),
+        ));
 }
 
 void _initBlog() {
