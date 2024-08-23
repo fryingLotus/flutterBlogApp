@@ -5,7 +5,7 @@ import 'package:blogapp/core/utils/format_date.dart';
 import 'package:blogapp/core/utils/show_options.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/data/models/comment_model.dart';
-import 'package:blogapp/features/blog/domain/usecases/comments/like_comment.dart';
+import 'package:blogapp/features/blog/domain/entities/comment.dart';
 import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_editor.dart';
 import 'package:flutter/material.dart';
@@ -25,19 +25,17 @@ class _CommentSectionState extends State<CommentSection> {
   final TextEditingController _contentController = TextEditingController();
   final GlobalKey<FormState> _uploadFormKey = GlobalKey<FormState>();
   final ScrollController _scrollController = ScrollController();
-  final List<CommentModel> _comments = [];
 
   late Box<bool> _likesBox;
   int _currentPage = 1;
   bool _hasMoreComments = true;
   bool _isLoadingMore = false;
+  late Future<void> _initFuture;
 
   @override
   void initState() {
     super.initState();
-    _openLikesBox();
-    _fetchComments();
-
+    _initFuture = _initialize();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
               _scrollController.position.maxScrollExtent &&
@@ -50,36 +48,24 @@ class _CommentSectionState extends State<CommentSection> {
     });
   }
 
+  Future<void> _initialize() async {
+    await _openLikesBox();
+    _fetchComments();
+  }
+
   Future<void> _openLikesBox() async {
     _likesBox = await Hive.box<bool>(name: 'commentLikesBox');
   }
 
   Future<void> _toggleLike(String commentId, bool isLiked) async {
     try {
-      // Toggle the like state
       if (isLiked) {
         context.read<CommentBloc>().add(CommentUnlike(commentId: commentId));
       } else {
         context.read<CommentBloc>().add(CommentLike(commentId: commentId));
       }
 
-      // Update the local likes state
       _likesBox.put(commentId, !isLiked);
-
-      // Update the specific comment's likes in the local _comments list
-      setState(() {
-        final commentIndex =
-            _comments.indexWhere((comment) => comment.id == commentId);
-        if (commentIndex != -1) {
-          final updatedComment = _comments[commentIndex].copyWith(
-            likes_count: isLiked
-                ? (_comments[commentIndex].likes_count ?? 0) - 1
-                : (_comments[commentIndex].likes_count ?? 0) + 1,
-          );
-          _comments[commentIndex] = updatedComment;
-        }
-
-      });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
@@ -96,44 +82,57 @@ class _CommentSectionState extends State<CommentSection> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<CommentBloc, CommentState>(
-      listener: (context, state) {
-        if (state is CommentUploadSuccess ||
-            state is CommentDeleteSuccess ||
-            state is CommentUpdateSuccess) {
-          _fetchComments();
-          showSnackBar(context, 'Action completed successfully');
-        } else if (state is CommentLikeSuccess ||
-            state is CommentUnlikeSuccess) {
-          showSnackBar(context, "Success!");
-        } else if (state is CommentFailure) {
-          showSnackBar(context, state.error, isError: true);
-        } else if (state is CommentLoadingMore) {
-          _isLoadingMore = true;
-        } else if (state is CommentsDisplaySuccess) {
-          _comments.addAll(state.comments
-              .map((comment) => CommentModel.fromComment(comment)));
-          _hasMoreComments = state.hasMore;
-          _isLoadingMore = false;
+    return FutureBuilder<void>(
+      future: _initFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Loader(); // Show a loading indicator while initializing
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else {
+          return BlocConsumer<CommentBloc, CommentState>(
+            listener: (context, state) {
+              if (state is CommentUploadSuccess ||
+                  state is CommentDeleteSuccess ||
+                  state is CommentUpdateSuccess) {
+                _fetchComments();
+                showSnackBar(context, 'Action completed successfully');
+              } else if (state is CommentLikeSuccess ||
+                  state is CommentUnlikeSuccess) {
+                showSnackBar(context, "Success!");
+              } else if (state is CommentFailure) {
+                showSnackBar(context, state.error, isError: true);
+              } else if (state is CommentLoadingMore) {
+                _isLoadingMore = true;
+              } else if (state is CommentsDisplaySuccess) {
+                final commentModels = state.comments
+                    .map((comment) => CommentModel.fromComment(comment))
+                    .toList();
+                _hasMoreComments = state.hasMore;
+                _isLoadingMore = false;
+              }
+            },
+            builder: (context, state) {
+              if (state is CommentLoading && _currentPage == 1) {
+                return const Loader();
+              }
+              return Column(
+                children: [
+                  _buildCommentForm(),
+                  const SizedBox(height: 20),
+                  if (state is CommentsDisplaySuccess) ...[
+                    if (state.comments.isEmpty)
+                      const Center(child: Text('No comments yet')),
+                    if (state.comments.isNotEmpty)
+                      _buildCommentsList(state.comments),
+                  ],
+                  if (_isLoadingMore)
+                    const Center(child: CircularProgressIndicator()),
+                ],
+              );
+            },
+          );
         }
-      },
-      builder: (context, state) {
-        if (state is CommentLoading && _currentPage == 1) {
-          return const Loader();
-        }
-        return Column(
-          children: [
-            _buildCommentForm(),
-            const SizedBox(height: 20),
-            if (state is CommentsDisplaySuccess) ...[
-              if (state.comments.isEmpty)
-                const Center(child: Text('No comments yet')),
-              if (state.comments.isNotEmpty) _buildCommentsList(),
-            ],
-            if (_isLoadingMore)
-              const Center(child: CircularProgressIndicator()),
-          ],
-        );
       },
     );
   }
@@ -154,14 +153,18 @@ class _CommentSectionState extends State<CommentSection> {
     );
   }
 
-  Widget _buildCommentsList() {
+  Widget _buildCommentsList(List<Comment> comments) {
+    final commentModels =
+        comments.map((comment) => CommentModel.fromComment(comment)).toList();
+
     return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: 500),
+      constraints: const BoxConstraints(maxHeight: 500),
       child: SingleChildScrollView(
         controller: _scrollController,
         child: Column(
-          children:
-              _comments.map((comment) => _buildCommentTile(comment)).toList(),
+          children: commentModels
+              .map((comment) => _buildCommentTile(comment))
+              .toList(),
         ),
       ),
     );
@@ -172,6 +175,8 @@ class _CommentSectionState extends State<CommentSection> {
     final updatedLikesCount =
         isLiked ? (comment.likes_count ?? 0) + 1 : (comment.likes_count ?? 0);
 
+    final posterId =
+        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
     return ListTile(
       title: Row(
         children: [
@@ -191,15 +196,18 @@ class _CommentSectionState extends State<CommentSection> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('${comment.posterName}'),
-                  GestureDetector(
-                    onTap: () => showOptions(
-                      context: context,
-                      onEdit: () => _editComment(comment.id, comment.content),
-                      onDelete: () => _deleteComment(comment.id),
-                      commentId: comment.id,
-                    ),
-                    child: const Icon(Icons.more_vert),
-                  ),
+                  posterId == comment.posterId
+                      ? GestureDetector(
+                          onTap: () => showOptions(
+                            context: context,
+                            onEdit: () =>
+                                _editComment(comment.id, comment.content),
+                            onDelete: () => _deleteComment(comment.id),
+                            commentId: comment.id,
+                          ),
+                          child: const Icon(Icons.more_vert),
+                        )
+                      : const SizedBox.shrink(),
                 ],
               ),
               Text(
@@ -233,7 +241,6 @@ class _CommentSectionState extends State<CommentSection> {
                 color: isLiked ? Colors.red : null),
             onPressed: () async {
               await _toggleLike(comment.id, isLiked);
-              setState(() {});
             },
           ),
         ],
@@ -284,9 +291,6 @@ class _CommentSectionState extends State<CommentSection> {
 
     if (_currentPage == 1 && !_isLoadingMore) {
       // Clear the list only when fetching the first page (initial load or refresh)
-      setState(() {
-        _comments.clear();
-      });
     }
 
     context.read<CommentBloc>().add(
@@ -303,10 +307,10 @@ class _CommentSectionState extends State<CommentSection> {
         (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
     context.read<CommentBloc>().add(CommentUpload(
           blogId: widget.blogId,
-          content: _contentController.text.trim(),
           posterId: posterId,
+          content: _contentController.text.trim(),
         ));
     _contentController.clear();
-    _comments.clear();
   }
 }
+
