@@ -92,11 +92,15 @@ class _CommentSectionState extends State<CommentSection> {
         } else {
           return BlocConsumer<CommentBloc, CommentState>(
             listener: (context, state) {
-              if (state is CommentUploadSuccess ||
-                  state is CommentDeleteSuccess ||
-                  state is CommentUpdateSuccess) {
+              if (state is CommentUploadSuccess) {
                 _fetchComments();
-                showSnackBar(context, 'Action completed successfully');
+                showSnackBar(context, 'Comment Uploaded successfully');
+              } else if (state is CommentDeleteSuccess) {
+                _fetchComments();
+                showSnackBar(context, "Comment deleted successfully");
+              } else if (state is CommentUpdateSuccess) {
+                _fetchComments();
+                showSnackBar(context, "Comment updated successfully");
               } else if (state is CommentLikeSuccess ||
                   state is CommentUnlikeSuccess) {
                 showSnackBar(context, "Success!");
@@ -262,7 +266,23 @@ class _CommentSectionState extends State<CommentSection> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Edit Comment'),
-          content: _buildCommentForm(),
+          content: Form(
+            key: editFormKey,
+            child: BlogEditor(
+              controller: editController,
+              hintText: "Edit your comment",
+              suffixIcon: const Icon(Icons.save),
+              onSuffixIconPressed: () {
+                if (editFormKey.currentState?.validate() ?? false) {
+                  context.read<CommentBloc>().add(CommentUpdate(
+                        commentId: commentId,
+                        content: editController.text.trim(),
+                      ));
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -313,4 +333,3 @@ class _CommentSectionState extends State<CommentSection> {
     _contentController.clear();
   }
 }
-
