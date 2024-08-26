@@ -18,6 +18,8 @@ final class BlogUpdateSuccess extends BlogState {}
 
 final class BlogDeleteSuccess extends BlogState {}
 
+final class BlogPaginationLoading extends BlogState {}
+
 final class BlogLikeSuccess extends BlogState {
   final String blogId;
 
@@ -32,8 +34,9 @@ final class BlogUnlikeSuccess extends BlogState {
 
 final class BlogsDisplaySuccess extends BlogState {
   final List<Blog> blogs;
+  final bool isLastPage;
 
-  BlogsDisplaySuccess(this.blogs);
+  BlogsDisplaySuccess(this.blogs, {this.isLastPage = false});
 }
 
 final class UserBlogsDisplaySuccess extends BlogState {
