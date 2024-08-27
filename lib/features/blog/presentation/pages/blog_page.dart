@@ -25,7 +25,7 @@ class _BlogPageState extends State<BlogPage> {
   static const int _pageSize = 10;
   final PagingController<int, Blog> _pagingController =
       PagingController(firstPageKey: 1);
-
+  final Set<String> _loadedBlogIds = {};
   @override
   void initState() {
     super.initState();
@@ -50,12 +50,21 @@ class _BlogPageState extends State<BlogPage> {
         if (!mounted) return; // Ensure the widget is still mounted
 
         final newItems = (state as BlogsDisplaySuccess).blogs;
-        final isLastPage = newItems.length < _pageSize;
+
+        // Filter out duplicate blogs
+        final filteredItems = newItems
+            .where((blog) => !_loadedBlogIds.contains(blog.id))
+            .toList();
+
+        // Add the new unique blog IDs to the set
+        _loadedBlogIds.addAll(filteredItems.map((blog) => blog.id));
+        final isLastPage = filteredItems.length < _pageSize;
+        print('Filtered Items: ${filteredItems.length}');
         if (isLastPage) {
-          _pagingController.appendLastPage(newItems);
+          _pagingController.appendLastPage(filteredItems);
         } else {
           final nextPageKey = pageKey + 1;
-          _pagingController.appendPage(newItems, nextPageKey);
+          _pagingController.appendPage(filteredItems, nextPageKey);
         }
       });
     } catch (error) {
