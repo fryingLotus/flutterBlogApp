@@ -9,6 +9,7 @@ import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/comment_section.dart';
+import 'package:blogapp/features/chat/presentation/pages/chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -37,7 +38,7 @@ class BlogViewerPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final String posterId =
         (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
-
+    print(blog.posterId);
     return Scaffold(
       appBar: AppBar(),
       body: MultiBlocListener(
@@ -88,10 +89,14 @@ class BlogViewerPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Text(
-                        'By ${blog.posterName}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w500, fontSize: 16.0),
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                            context, ChatPage.route(blog.posterId)),
+                        child: Text(
+                          'By ${blog.posterName}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 16.0),
+                        ),
                       ),
                       Text(
                         '${formatDateBydMMMYYYY(blog.updatedAt)} . ${calculateReadingTime(blog.content)} mins',

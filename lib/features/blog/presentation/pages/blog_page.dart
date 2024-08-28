@@ -1,6 +1,4 @@
-import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
-import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
@@ -47,16 +45,14 @@ class _BlogPageState extends State<BlogPage> {
       bloc.stream
           .firstWhere((state) => state is BlogsDisplaySuccess)
           .then((state) {
-        if (!mounted) return; // Ensure the widget is still mounted
+        if (!mounted) return;
 
         final newItems = (state as BlogsDisplaySuccess).blogs;
 
-        // Filter out duplicate blogs
         final filteredItems = newItems
             .where((blog) => !_loadedBlogIds.contains(blog.id))
             .toList();
 
-        // Add the new unique blog IDs to the set
         _loadedBlogIds.addAll(filteredItems.map((blog) => blog.id));
         final isLastPage = filteredItems.length < _pageSize;
         print('Filtered Items: ${filteredItems.length}');

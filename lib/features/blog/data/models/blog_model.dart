@@ -56,7 +56,6 @@ class BlogModel extends Blog {
     );
   }
 
-  // No need to include isLiked in toJson since it is not part of the backend data
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'id': id,
@@ -70,4 +69,3 @@ class BlogModel extends Blog {
     };
   }
 }
-
