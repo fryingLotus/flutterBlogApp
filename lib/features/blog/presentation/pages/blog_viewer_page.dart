@@ -48,7 +48,7 @@ class BlogViewerPage extends StatelessWidget {
                 showSnackBar(context, state.error, isError: true);
               } else if (state is BlogDeleteSuccess) {
                 Navigator.pop(context);
-                context.read<BlogBloc>().add(BlogFetchAllBlogs());
+                //context.read<BlogBloc>().add(BlogFetchAllBlogs());
                 showSnackBar(context, 'Successfully deleted blog');
               }
             },

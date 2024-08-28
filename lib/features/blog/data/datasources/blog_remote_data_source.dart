@@ -10,7 +10,7 @@ abstract interface class BlogRemoteDataSource {
     required File image,
     required BlogModel blog,
   });
-  Future<List<BlogModel>> getAllBlogs();
+  Future<List<BlogModel>> getAllBlogs({int page = 1, int pageSize = 10});
   Future<List<BlogModel>> getUserBlogs();
   Future<void> deleteBlog(String blogId);
   Future<BlogModel> updateBlog(BlogModel blog);
@@ -52,10 +52,16 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   }
 
   @override
-  Future<List<BlogModel>> getAllBlogs() async {
+  Future<List<BlogModel>> getAllBlogs({int page = 1, int pageSize = 10}) async {
     try {
-      final blogs =
-          await supabaseClient.from('blogs').select('*,profiles (name)');
+      final start = (page - 1) * pageSize;
+      final end = start + pageSize - 1;
+
+      final blogs = await supabaseClient
+          .from('blogs')
+          .select('*,profiles (name)')
+          .range(start, end);
+
       return blogs
           .map((blog) => BlogModel.fromJson(blog).copyWith(
                 posterName: blog['profiles']['name'],

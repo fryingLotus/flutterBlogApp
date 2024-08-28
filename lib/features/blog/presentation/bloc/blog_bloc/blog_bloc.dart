@@ -75,15 +75,34 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   }
 
   void _onFetchAllBlog(BlogFetchAllBlogs event, Emitter<BlogState> emit) async {
-    emit(BlogLoading());
-    final res = await _getAllBlogs(NoParams());
-    res.fold(
-      (l) => emit(BlogFailure(l.message)),
-      (r) {
-        _blogs = r; // Store blogs locally
-        emit(BlogsDisplaySuccess(r));
-      },
-    );
+    if (state is BlogsDisplaySuccess) {
+      final currentBlogs = (state as BlogsDisplaySuccess).blogs;
+      emit(BlogPaginationLoading());
+
+      final res = await _getAllBlogs(
+          GetAllBlogsParams(page: event.page, pageSize: event.pageSize));
+      res.fold(
+        (l) => emit(BlogFailure(l.message)),
+        (r) {
+          final isLastPage = r.length < event.pageSize;
+          final updatedBlogs = List<Blog>.from(currentBlogs)..addAll(r);
+          _blogs = updatedBlogs;
+          emit(BlogsDisplaySuccess(updatedBlogs, isLastPage: isLastPage));
+        },
+      );
+    } else {
+      emit(BlogLoading());
+      final res = await _getAllBlogs(
+          GetAllBlogsParams(page: event.page, pageSize: event.pageSize));
+      res.fold(
+        (l) => emit(BlogFailure(l.message)),
+        (r) {
+          final isLastPage = r.length < event.pageSize;
+          _blogs = r;
+          emit(BlogsDisplaySuccess(r, isLastPage: isLastPage));
+        },
+      );
+    }
   }
 
   void _onFetchUserBlog(

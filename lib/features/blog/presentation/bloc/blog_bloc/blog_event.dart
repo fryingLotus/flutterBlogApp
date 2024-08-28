@@ -38,7 +38,12 @@ final class BlogUpdate extends BlogEvent {
   });
 }
 
-final class BlogFetchAllBlogs extends BlogEvent {}
+final class BlogFetchAllBlogs extends BlogEvent {
+  final int page;
+  final int pageSize;
+
+  BlogFetchAllBlogs({required this.page, required this.pageSize});
+}
 
 final class BlogFetchUserBlogs extends BlogEvent {}
 
