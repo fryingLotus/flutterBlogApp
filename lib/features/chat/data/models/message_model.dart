@@ -8,7 +8,6 @@ class MessageModel extends Message {
     required super.recipientId,
     required super.content,
     required super.createdAt,
-    required super.isMine,
     super.posterName,
   });
 
@@ -22,7 +21,6 @@ class MessageModel extends Message {
       createdAt: map['created_at'] == null
           ? DateTime.now()
           : DateTime.parse(map['created_at']),
-      isMine: myUserId == map['poster_id'],
       posterName: map['poster_name'] as String?,
     );
   }
@@ -35,7 +33,6 @@ class MessageModel extends Message {
     String? content,
     DateTime? createdAt,
     String? posterName,
-    bool? isMine,
   }) {
     return MessageModel(
       id: id ?? this.id,
@@ -44,7 +41,6 @@ class MessageModel extends Message {
       recipientId: recipientId ?? this.recipientId,
       content: content ?? this.content,
       createdAt: createdAt ?? this.createdAt,
-      isMine: isMine ?? this.isMine,
       posterName: posterName ?? this.posterName,
     );
   }

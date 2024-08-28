@@ -36,10 +36,13 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         .stream(primaryKey: ['id']).eq('conversation_id', conversationId);
 
     return query.map((response) {
+      final userId = supabaseClient.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User is not authenticated');
+      }
       return response
-          .map((message) => MessageModel.fromJson(message, ''))
+          .map((message) => MessageModel.fromJson(message, userId))
           .toList();
     });
   }
 }
-

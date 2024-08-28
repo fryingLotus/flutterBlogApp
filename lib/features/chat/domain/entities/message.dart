@@ -5,7 +5,6 @@ class Message {
   final String recipientId;
   final String content;
   final DateTime createdAt;
-  final bool isMine;
   final String? posterName;
 
   Message({
@@ -15,7 +14,6 @@ class Message {
     required this.recipientId,
     required this.content,
     required this.createdAt,
-    required this.isMine,
     this.posterName,
   });
 }
