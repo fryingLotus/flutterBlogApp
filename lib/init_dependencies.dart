@@ -36,6 +36,12 @@ import 'package:blogapp/features/blog/domain/usecases/comments/update_comment.da
 import 'package:blogapp/features/blog/domain/usecases/comments/upload_comment.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
+import 'package:blogapp/features/chat/data/datasources/chat_remote_data_source.dart';
+import 'package:blogapp/features/chat/data/repositories/chat_repository_impl.dart';
+import 'package:blogapp/features/chat/domain/repositories/chat_repository.dart';
+import 'package:blogapp/features/chat/domain/usecases/subscribe_to_message.dart';
+import 'package:blogapp/features/chat/domain/usecases/upload_message.dart';
+import 'package:blogapp/features/chat/presentation/bloc/chat_bloc/chat_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';

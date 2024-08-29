@@ -6,6 +6,7 @@ Future<void> initDependencies() async {
   _initAuth();
   _initBlog();
   _initComment();
+  _initChat();
   final supabase = await Supabase.initialize(
     url: AppSecrets.supabaseUrl,
     anonKey: AppSecrets.supabaseAnonKey,
@@ -133,4 +134,37 @@ void _initComment() {
         updateComment: serviceLocator(),
         likeComment: serviceLocator(),
         unlikeComment: serviceLocator()));
+}
+
+void _initChat() {
+  // Datasource
+  serviceLocator
+    ..registerFactory<ChatRemoteDataSource>(
+      () => ChatRemoteDataSourceImpl(
+        serviceLocator(),
+      ),
+    )
+    // Repository
+    ..registerFactory<ChatRepository>(
+      () => ChatRepositoryImpl(
+        serviceLocator(),
+        serviceLocator(),
+      ),
+    )
+    // Usecases
+    ..registerFactory(
+      () => UploadMessage(
+        serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+      () => SubscribeToMessage(
+        serviceLocator(),
+      ),
+    )
+    // Bloc
+    ..registerLazySingleton(() => ChatBloc(
+          uploadMessage: serviceLocator(),
+          subscribeToMessages: serviceLocator(),
+        ));
 }

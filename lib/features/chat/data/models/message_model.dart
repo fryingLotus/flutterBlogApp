@@ -53,8 +53,6 @@ class MessageModel extends Message {
       'recipient_id': recipientId,
       'content': content,
       'created_at': createdAt.toIso8601String(),
-      'poster_name': posterName,
     };
   }
 }
-

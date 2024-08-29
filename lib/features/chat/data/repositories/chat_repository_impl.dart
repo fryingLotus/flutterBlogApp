@@ -39,8 +39,19 @@ class ChatRepositoryImpl implements ChatRepository {
 
   @override
   Stream<Either<Failures, List<Message>>> subscribeToMessages(
-      String conversationId) {
-    // TODO: implement subscribeToMessages
-    throw UnimplementedError();
+      String conversationId) async* {
+    if (await connectionChecker.isConnected) {
+      try {
+        final messageStream =
+            chatRemoteDataSource.subscribeToMessages(conversationId);
+
+        yield* messageStream
+            .map((messages) => right<Failures, List<Message>>(messages));
+      } catch (e) {
+        yield left(Failures(e.toString()));
+      }
+    } else {
+      yield left(Failures("No Internet Connection"));
+    }
   }
 }

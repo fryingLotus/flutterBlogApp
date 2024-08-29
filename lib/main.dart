@@ -6,6 +6,7 @@ import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
+import 'package:blogapp/features/chat/presentation/bloc/chat_bloc/chat_bloc.dart';
 import 'package:blogapp/init_dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -29,6 +30,9 @@ void main() async {
       ),
       BlocProvider(
         create: (_) => serviceLocator<CommentBloc>(),
+      ),
+      BlocProvider(
+        create: (_) => serviceLocator<ChatBloc>(),
       ),
     ],
     child: const MyApp(),
