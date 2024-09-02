@@ -1,4 +1,3 @@
-import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/core/error/exceptions.dart';
 import 'package:blogapp/core/error/failures.dart';
 import 'package:blogapp/core/network/connection_checker.dart';
@@ -30,6 +29,7 @@ class FollowerRepositoryImpl implements FollowerRepository {
         followerId: followerId,
         followedId: followedId,
         followedAt: DateTime.now(),
+        followerCount: 0,
       );
 
       final followingUser =
@@ -43,14 +43,14 @@ class FollowerRepositoryImpl implements FollowerRepository {
   }
 
   @override
-  Future<Either<Failures, List<User>>> getFollowers(String userId) async {
+  Future<Either<Failures, List<Follower>>> getFollowers(String userId) async {
     try {
       if (!await connectionChecker.isConnected) {
         return left(Failures('No Internet Connection!'));
       }
 
       final followers = await followerRemoteDataSource.getFollowers(userId);
-      return right(followers);
+      return right(followers.map((model) => model as Follower).toList());
     } on ServerException catch (e) {
       return left(Failures(e.message));
     } catch (e) {
@@ -67,6 +67,25 @@ class FollowerRepositoryImpl implements FollowerRepository {
 
       await followerRemoteDataSource.unfollowUser(userIdToUnfollow);
       return right(null);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failures, Follower>> getFollowerDetail(
+      String followerId) async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        return left(Failures('No Internet Connection!'));
+      }
+
+      final FollowerModel followerModel =
+          await followerRemoteDataSource.getFollowerDetail(followerId);
+
+      return right(followerModel);
     } on ServerException catch (e) {
       return left(Failures(e.message));
     } catch (e) {

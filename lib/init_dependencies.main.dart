@@ -6,6 +6,7 @@ Future<void> initDependencies() async {
   _initAuth();
   _initBlog();
   _initComment();
+  _initFollower();
   final supabase = await Supabase.initialize(
     url: AppSecrets.supabaseUrl,
     anonKey: AppSecrets.supabaseAnonKey,
@@ -133,4 +134,31 @@ void _initComment() {
         updateComment: serviceLocator(),
         likeComment: serviceLocator(),
         unlikeComment: serviceLocator()));
+}
+
+void _initFollower() {
+  // Registering the data source
+  serviceLocator.registerFactory<FollowerRemoteDataSource>(
+    () => FollowerRemoteDataSourceImpl(serviceLocator()),
+  );
+
+  // Registering the repository
+  serviceLocator.registerFactory<FollowerRepository>(
+    () => FollowerRepositoryImpl(serviceLocator(), serviceLocator()),
+  );
+
+  // Registering the use cases
+  serviceLocator
+    ..registerFactory(() => FollowUser(serviceLocator()))
+    ..registerFactory(() => UnfollowUser(serviceLocator()))
+    ..registerFactory(() => GetFollowers(serviceLocator()))
+    ..registerFactory(() => GetFollowerDetail(serviceLocator()));
+
+  // Registering the cubit
+  serviceLocator.registerLazySingleton(() => FollowUserCubit(
+        serviceLocator(),
+        serviceLocator(),
+        serviceLocator(),
+        serviceLocator(),
+      ));
 }

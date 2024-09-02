@@ -20,7 +20,6 @@ final class FollowUserError extends FollowUserState {
 final class UnfollowUserSuccess extends FollowUserState {}
 
 final class GetFollowersSuccess extends FollowUserState {
-  final List<User> followers;
+  final List<Follower> followers;
   GetFollowersSuccess(this.followers);
 }
-

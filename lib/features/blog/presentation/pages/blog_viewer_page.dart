@@ -1,4 +1,5 @@
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:blogapp/core/common/pages/follower_page.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/calculate_reading_time.dart';
@@ -9,6 +10,7 @@ import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/comment_section.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -88,10 +90,14 @@ class BlogViewerPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Text(
-                        'By ${blog.posterName}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w500, fontSize: 16.0),
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                            context, FollowerPage.route(id: blog.posterId)),
+                        child: Text(
+                          'By ${blog.posterName}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 16.0),
+                        ),
                       ),
                       Text(
                         '${formatDateBydMMMYYYY(blog.updatedAt)} . ${calculateReadingTime(blog.content)} mins',

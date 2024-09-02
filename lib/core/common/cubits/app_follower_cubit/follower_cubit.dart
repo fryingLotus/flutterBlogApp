@@ -1,6 +1,6 @@
-import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/features/auth/domain/entities/follower.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/follow_user.dart';
+import 'package:blogapp/features/auth/domain/usecases/follower/get_follower_detail.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/unfollow_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/get_followers.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +12,13 @@ class FollowUserCubit extends Cubit<FollowUserState> {
   final FollowUser followUserUseCase;
   final UnfollowUser unfollowUserUseCase;
   final GetFollowers getFollowersUseCase;
+  final GetFollowerDetail getFollowerDetailUseCase; // Updated variable name
 
   FollowUserCubit(
     this.followUserUseCase,
     this.unfollowUserUseCase,
     this.getFollowersUseCase,
+    this.getFollowerDetailUseCase, // Include in constructor
   ) : super(FollowUserInitial());
 
   Future<void> followUser(String followedId, String followerId) async {
@@ -51,5 +53,21 @@ class FollowUserCubit extends Cubit<FollowUserState> {
       (followers) => emit(GetFollowersSuccess(followers)),
     );
   }
-}
 
+  Future<void> getFollowerDetail(String followerId) async {
+    // New method
+    emit(FollowUserLoading());
+    final result = await getFollowerDetailUseCase(GetFollowerDetailParams(
+      followerId: followerId,
+    ));
+    result.fold(
+      (failure) {
+        print(failure.message.toString());
+        emit(FollowUserError(failure.message));
+      },
+      (follower) {
+        emit(FollowUserSuccess(follower));
+      },
+    );
+  }
+}

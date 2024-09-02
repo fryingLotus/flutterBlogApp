@@ -1,3 +1,4 @@
+import 'package:blogapp/core/common/cubits/app_follower_cubit/follower_cubit.dart';
 import 'package:blogapp/core/common/cubits/app_theme/theme_cubit.dart';
 import 'package:blogapp/core/common/cubits/app_theme/theme_state.dart';
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
@@ -20,6 +21,9 @@ void main() async {
       ),
       BlocProvider(
         create: (_) => serviceLocator<ThemeCubit>(),
+      ),
+      BlocProvider(
+        create: (_) => serviceLocator<FollowUserCubit>(),
       ),
       BlocProvider(
         create: (_) => serviceLocator<AuthBloc>(),

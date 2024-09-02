@@ -1,14 +1,13 @@
 // data/datasources/follower_remote_data_source.dart
 import 'package:blogapp/core/error/exceptions.dart';
 import 'package:blogapp/features/auth/data/models/follower_model.dart';
-import 'package:blogapp/features/auth/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class FollowerRemoteDataSource {
   Future<FollowerModel> followUser(FollowerModel follower);
   Future<void> unfollowUser(String userIdToUnfollow);
-  Future<List<UserModel>> getFollowers(String userId);
-  Future<UserModel> getFollowerDetail(String followerId);
+  Future<List<FollowerModel>> getFollowers(String userId);
+  Future<FollowerModel> getFollowerDetail(String followerId);
 }
 
 class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
@@ -48,7 +47,7 @@ class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
   }
 
   @override
-  Future<List<UserModel>> getFollowers(String userId) async {
+  Future<List<FollowerModel>> getFollowers(String userId) async {
     try {
       final response = await supabaseClient
           .from('followers')
@@ -56,7 +55,7 @@ class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
           .eq('followed_id', userId);
 
       return (response as List)
-          .map((json) => UserModel.fromJson(json))
+          .map((json) => FollowerModel.fromJson(json))
           .toList();
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
@@ -66,15 +65,17 @@ class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
   }
 
   @override
-  Future<UserModel> getFollowerDetail(String followerId) async {
+  Future<FollowerModel> getFollowerDetail(String followerId) async {
     try {
-      final response = await supabaseClient
-          .from('profiles')
-          .select('id, name, avatar_url')
-          .eq('id', followerId)
-          .single();
+      final response = await supabaseClient.rpc('get_follower_detail', params: {
+        'follower_id': followerId,
+      }).maybeSingle();
 
-      return UserModel.fromJson(response);
+      if (response == null) {
+        throw ServerException('No follower details found');
+      }
+
+      return FollowerModel.fromJson(response);
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {
