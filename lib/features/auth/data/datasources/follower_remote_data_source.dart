@@ -68,7 +68,7 @@ class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
   Future<FollowerModel> getFollowerDetail(String followerId) async {
     try {
       final response = await supabaseClient.rpc('get_follower_detail', params: {
-        'follower_id': followerId,
+        'p_follower_id': followerId,
       }).maybeSingle();
 
       if (response == null) {

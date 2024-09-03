@@ -93,4 +93,3 @@ class FollowerRepositoryImpl implements FollowerRepository {
     }
   }
 }
-

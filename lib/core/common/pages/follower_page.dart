@@ -1,5 +1,7 @@
-import 'package:blogapp/core/common/cubits/app_follower_cubit/follower_cubit.dart';
+import 'package:blogapp/core/common/cubits/app_follower_cubit/follower_cubit.dart'; // Ensure these are public
+import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
+import 'package:blogapp/core/utils/format_date.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,15 +19,30 @@ class FollowerPage extends StatefulWidget {
 }
 
 class _FollowerPageState extends State<FollowerPage> {
+  late final String _currentUserId;
+
   @override
   void initState() {
     super.initState();
+    // Initialize _currentUserId here
+    _currentUserId =
+        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
     _fetchFollowerDetails();
   }
 
   void _fetchFollowerDetails() {
     final cubit = context.read<FollowUserCubit>();
     cubit.getFollowerDetail(widget.otherId);
+  }
+
+  void _followUser() {
+    final cubit = context.read<FollowUserCubit>();
+    cubit.followUser(widget.otherId, _currentUserId);
+  }
+
+  void _unfollowUser() {
+    final cubit = context.read<FollowUserCubit>();
+    cubit.unfollowUser(widget.otherId);
   }
 
   @override
@@ -42,18 +59,47 @@ class _FollowerPageState extends State<FollowerPage> {
         },
         builder: (context, state) {
           if (state is FollowUserLoading) {
-            // Show a loading indicator while the cubit is loading
             return const Loader();
           } else if (state is FollowUserSuccess) {
-            // Display follower details when data is successfully loaded
             final follower = state.follower;
-            print("follower $follower");
+            final isFollowing = follower.followedAt != null;
+
             return Center(
-              child: Text('Follower: ${follower.profileName ?? 'Unknown'}'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: follower.profileAvatar != null &&
+                            follower.profileAvatar!.isNotEmpty
+                        ? NetworkImage(follower.profileAvatar!)
+                        : null,
+                    child: follower.profileAvatar == null ||
+                            follower.profileAvatar!.isEmpty
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Follower: ${follower.profileName ?? 'Unknown'}'),
+                  Text('Follower Count: ${follower.followerCount}'),
+                  Text(
+                      'Followed At: ${follower.followedAt != null ? formatDateBydMMMYYYY(follower.followedAt!) : 'Not followed'}'),
+                  const SizedBox(height: 20),
+                  if (isFollowing)
+                    ElevatedButton(
+                      onPressed: _unfollowUser,
+                      child: const Text('Unfollow'),
+                    )
+                  else
+                    ElevatedButton(
+                      onPressed: _followUser,
+                      child: const Text('Follow'),
+                    ),
+                ],
+              ),
             );
           } else {
-            // Initial or default state
-            return Center(
+            return const Center(
               child: Text('No data'),
             );
           }
@@ -62,4 +108,3 @@ class _FollowerPageState extends State<FollowerPage> {
     );
   }
 }
-
