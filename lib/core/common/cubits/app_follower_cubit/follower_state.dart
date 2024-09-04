@@ -12,6 +12,11 @@ final class FollowUserSuccess extends FollowUserState {
   FollowUserSuccess(this.follower);
 }
 
+final class GetFollowerDetailSuccess extends FollowUserState {
+  final Follower follower;
+  GetFollowerDetailSuccess(this.follower);
+}
+
 final class FollowUserError extends FollowUserState {
   final String message;
   FollowUserError(this.message);

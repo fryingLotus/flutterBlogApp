@@ -29,7 +29,10 @@ class FollowUserCubit extends Cubit<FollowUserState> {
     ));
     result.fold(
       (failure) => emit(FollowUserError(failure.message)),
-      (follower) => emit(FollowUserSuccess(follower)),
+      (follower) {
+        print('Follow action response: ${follower.profileName}');
+        emit(FollowUserSuccess(follower));
+      },
     );
   }
 
@@ -66,7 +69,7 @@ class FollowUserCubit extends Cubit<FollowUserState> {
         emit(FollowUserError(failure.message));
       },
       (follower) {
-        emit(FollowUserSuccess(follower));
+        emit(GetFollowerDetailSuccess(follower));
       },
     );
   }

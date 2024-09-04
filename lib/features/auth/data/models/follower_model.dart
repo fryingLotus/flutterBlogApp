@@ -6,12 +6,13 @@ class FollowerModel extends Follower {
     required super.followerId,
     required super.followedId,
     super.followedAt,
-    required super.followerCount,
+    super.followerCount,
     super.profileAvatar,
     super.profileName,
   });
 
   factory FollowerModel.fromJson(Map<String, dynamic> map) {
+    print('received json $map');
     return FollowerModel(
         id: map['id'] as String? ??
             '', // Handle null case, ensure id is never null
@@ -50,8 +51,6 @@ class FollowerModel extends Follower {
       'follower_id': followerId,
       'followed_id': followedId,
       'followed_at': followedAt?.toIso8601String(),
-      'profile_name': profileName,
-      'follower_count': followerCount,
     };
   }
 }

@@ -29,7 +29,6 @@ class FollowerRepositoryImpl implements FollowerRepository {
         followerId: followerId,
         followedId: followedId,
         followedAt: DateTime.now(),
-        followerCount: 0,
       );
 
       final followingUser =
