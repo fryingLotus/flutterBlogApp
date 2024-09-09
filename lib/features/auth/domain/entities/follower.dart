@@ -6,14 +6,20 @@ class Follower {
   final String? profileName;
   final String? profileAvatar;
   final int? followerCount;
+  final int? blogCount;
+  final int? followingCount;
+  final bool? isFollowed;
 
   Follower(
       {required this.id,
       required this.followerId,
       required this.followedId,
       this.followedAt,
+      this.blogCount,
       this.followerCount,
+      this.followingCount,
       this.profileName,
+      this.isFollowed,
       this.profileAvatar});
   @override
   String toString() {

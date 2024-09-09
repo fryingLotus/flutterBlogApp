@@ -1,15 +1,17 @@
 import 'package:blogapp/features/auth/domain/entities/follower.dart';
 
 class FollowerModel extends Follower {
-  FollowerModel({
-    required super.id,
-    required super.followerId,
-    required super.followedId,
-    super.followedAt,
-    super.followerCount,
-    super.profileAvatar,
-    super.profileName,
-  });
+  FollowerModel(
+      {required super.id,
+      required super.followerId,
+      required super.followedId,
+      super.followedAt,
+      super.isFollowed,
+      super.followerCount,
+      super.profileAvatar,
+      super.profileName,
+      super.followingCount,
+      super.blogCount});
 
   factory FollowerModel.fromJson(Map<String, dynamic> map) {
     print('received json $map');
@@ -24,6 +26,10 @@ class FollowerModel extends Follower {
         profileName: map['profile_name'] as String?, // Nullable profile name
         followerCount:
             map['follower_count'] as int? ?? 0, // Default to 0 if null
+        blogCount: map['blog_count'] as int? ?? 0, // Default to 0 if null
+        followingCount:
+            map['following_count'] as int? ?? 0, // Default to 0 if null
+        isFollowed: map['is_followed'] as bool? ?? false,
         profileAvatar: map['profile_avatar_url'] as String? ?? '');
   }
 
@@ -33,7 +39,10 @@ class FollowerModel extends Follower {
       String? followedId,
       DateTime? followedAt,
       int? followerCount,
+      int? followingCount,
       String? profileName,
+      bool? isFollowed,
+      int? blogCount,
       String? profileAvatar}) {
     return FollowerModel(
         id: id ?? this.id,
@@ -41,7 +50,10 @@ class FollowerModel extends Follower {
         followedId: followedId ?? this.followedId,
         followedAt: followedAt ?? this.followedAt,
         followerCount: followerCount ?? this.followerCount,
+        blogCount: blogCount ?? this.blogCount,
+        followingCount: followingCount ?? this.followingCount,
         profileName: profileName ?? this.profileName,
+        isFollowed: isFollowed ?? this.isFollowed,
         profileAvatar: profileAvatar ?? this.profileAvatar);
   }
 

@@ -1,7 +1,6 @@
 import 'package:blogapp/core/common/cubits/app_follower_cubit/follower_cubit.dart';
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
-import 'package:blogapp/core/utils/format_date.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -67,7 +66,6 @@ class _FollowerPageState extends State<FollowerPage> {
       await _followUser();
     }
 
-    // Update the follow status in Hive
     _followBox!.put(widget.otherId, !isFollowing);
     setState(() {});
   }
@@ -87,21 +85,23 @@ class _FollowerPageState extends State<FollowerPage> {
     if (!_isInitialized) {
       return const Center(child: CircularProgressIndicator());
     }
+
     final isFollowing =
         _followBox?.get(widget.otherId, defaultValue: false) ?? false;
 
+    final isOwnProfile = widget.otherId == _currentUserId;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Follower Details'),
+        title: Text(isOwnProfile ? 'My Profile' : 'Follower Details'),
       ),
       body: BlocConsumer<FollowUserCubit, FollowUserState>(
         listener: (context, state) {
           if (state is FollowUserError) {
             showSnackBar(context, state.message, isError: true);
-          } else if (state is UnfollowUserSuccess) {
-            _fetchFollowerDetails();
-          } else if (state is FollowUserSuccess) {
-            _fetchFollowerDetails();
+          } else if (state is UnfollowUserSuccess ||
+              state is FollowUserSuccess) {
+            _fetchFollowerDetails(); // Refetch follower details to update UI
           }
         },
         builder: (context, state) {
@@ -114,6 +114,12 @@ class _FollowerPageState extends State<FollowerPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Text(
+                    follower.profileName ?? 'Unknown',
+                    style: const TextStyle(
+                        fontSize: 30.0, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10.0),
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: follower.profileAvatar != null &&
@@ -126,15 +132,76 @@ class _FollowerPageState extends State<FollowerPage> {
                         : null,
                   ),
                   const SizedBox(height: 20),
-                  Text('Follower: ${follower.profileName ?? 'Unknown'}'),
-                  Text('Follower Count: ${follower.followerCount}'),
-                  Text(
-                      'Followed At: ${follower.followedAt != null ? formatDateBydMMMYYYY(follower.followedAt!) : 'Not followed'}'),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _toggleFollow,
-                    child: Text(isFollowing ? 'Unfollow' : 'Follow'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                '${follower.followingCount}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 5.0),
+                              const Text(
+                                'User Follows',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                '${follower.followerCount}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 5.0),
+                              const Text(
+                                'Follower Count',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Text(
+                                '${follower.blogCount}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 5.0),
+                              const Text(
+                                'Blogs Count',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 10.0),
+                  if (!isOwnProfile) ...[
+                    // Only display this if the profile being viewed follows the current user
+                    if (follower.isFollowed ?? false)
+                      Text('This user is following you'),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: _toggleFollow,
+                      child: Text(isFollowing ? 'Unfollow' : 'Follow'),
+                    ),
+                  ],
                 ],
               ),
             );

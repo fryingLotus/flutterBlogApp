@@ -67,8 +67,10 @@ class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
   @override
   Future<FollowerModel> getFollowerDetail(String followerId) async {
     try {
+      final userId = supabaseClient.auth.currentSession!.user.id;
       final response = await supabaseClient.rpc('get_follower_detail', params: {
         'p_follower_id': followerId,
+        'p_current_user_id': userId,
       }).maybeSingle();
 
       if (response == null) {
