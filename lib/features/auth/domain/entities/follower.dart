@@ -9,6 +9,7 @@ class Follower {
   final int? blogCount;
   final int? followingCount;
   final bool? isFollowed;
+  final bool? isFollowingYou;
 
   Follower(
       {required this.id,
@@ -16,6 +17,7 @@ class Follower {
       required this.followedId,
       this.followedAt,
       this.blogCount,
+      this.isFollowingYou,
       this.followerCount,
       this.followingCount,
       this.profileName,

@@ -10,26 +10,25 @@ class FollowerModel extends Follower {
       super.followerCount,
       super.profileAvatar,
       super.profileName,
+      super.isFollowingYou,
       super.followingCount,
       super.blogCount});
 
   factory FollowerModel.fromJson(Map<String, dynamic> map) {
     print('received json $map');
     return FollowerModel(
-        id: map['id'] as String? ??
-            '', // Handle null case, ensure id is never null
-        followerId: map['follower_id'] as String? ?? '', // Handle null case
-        followedId: map['followed_id'] as String? ?? '', // Handle null case
+        id: map['id'] as String? ?? '',
+        followerId: map['follower_id'] as String? ?? '',
+        followedId: map['followed_id'] as String? ?? '',
         followedAt: map['followed_at'] == null
-            ? null // Set to null if followed_at is not present
+            ? null
             : DateTime.parse(map['followed_at'] as String),
-        profileName: map['profile_name'] as String?, // Nullable profile name
-        followerCount:
-            map['follower_count'] as int? ?? 0, // Default to 0 if null
-        blogCount: map['blog_count'] as int? ?? 0, // Default to 0 if null
-        followingCount:
-            map['following_count'] as int? ?? 0, // Default to 0 if null
+        profileName: map['profile_name'] as String?,
+        followerCount: map['follower_count'] as int? ?? 0,
+        blogCount: map['blog_count'] as int? ?? 0,
+        followingCount: map['following_count'] as int? ?? 0,
         isFollowed: map['is_followed'] as bool? ?? false,
+        isFollowingYou: map['is_following_you'] as bool? ?? false,
         profileAvatar: map['profile_avatar_url'] as String? ?? '');
   }
 
@@ -41,6 +40,7 @@ class FollowerModel extends Follower {
       int? followerCount,
       int? followingCount,
       String? profileName,
+      bool? isFollowingYou,
       bool? isFollowed,
       int? blogCount,
       String? profileAvatar}) {
@@ -51,6 +51,7 @@ class FollowerModel extends Follower {
         followedAt: followedAt ?? this.followedAt,
         followerCount: followerCount ?? this.followerCount,
         blogCount: blogCount ?? this.blogCount,
+        isFollowingYou: isFollowingYou ?? this.isFollowingYou,
         followingCount: followingCount ?? this.followingCount,
         profileName: profileName ?? this.profileName,
         isFollowed: isFollowed ?? this.isFollowed,

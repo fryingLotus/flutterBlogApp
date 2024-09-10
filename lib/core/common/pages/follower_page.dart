@@ -4,7 +4,6 @@ import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
 
 class FollowerPage extends StatefulWidget {
   final String otherId;
@@ -20,33 +19,13 @@ class FollowerPage extends StatefulWidget {
 
 class _FollowerPageState extends State<FollowerPage> {
   late final String _currentUserId;
-  Box<bool>? _followBox; // Make it nullable
-  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _currentUserId =
         (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
-    _openFollowBox();
-  }
-
-  Future<void> _openFollowBox() async {
-    setState(() {
-      _isInitialized = false;
-    });
-    try {
-      _followBox = await Hive.box<bool>(name: 'followBox');
-      _fetchFollowerDetails();
-      setState(() {
-        _isInitialized = true;
-      });
-    } catch (e) {
-      print("Error opening follow box: $e");
-      setState(() {
-        _isInitialized = true;
-      });
-    }
+    _fetchFollowerDetails();
   }
 
   void _fetchFollowerDetails() {
@@ -55,19 +34,20 @@ class _FollowerPageState extends State<FollowerPage> {
   }
 
   void _toggleFollow() async {
-    if (_followBox == null || !_isInitialized) return;
+    final cubit = context.read<FollowUserCubit>();
+    final state = cubit.state;
 
-    final isFollowing =
-        _followBox!.get(widget.otherId, defaultValue: false) ?? false;
+    if (state is GetFollowerDetailSuccess) {
+      final isFollowing = state.follower.isFollowed ?? false;
 
-    if (isFollowing) {
-      await _unfollowUser();
-    } else {
-      await _followUser();
+      if (isFollowing) {
+        await _unfollowUser();
+      } else {
+        await _followUser();
+      }
+
+      _fetchFollowerDetails(); // Refetch follower details to update UI
     }
-
-    _followBox!.put(widget.otherId, !isFollowing);
-    setState(() {});
   }
 
   Future<void> _followUser() async {
@@ -82,26 +62,16 @@ class _FollowerPageState extends State<FollowerPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final isFollowing =
-        _followBox?.get(widget.otherId, defaultValue: false) ?? false;
-
-    final isOwnProfile = widget.otherId == _currentUserId;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(isOwnProfile ? 'My Profile' : 'Follower Details'),
+        title: Text(
+          widget.otherId == _currentUserId ? 'My Profile' : 'Follower Details',
+        ),
       ),
       body: BlocConsumer<FollowUserCubit, FollowUserState>(
         listener: (context, state) {
           if (state is FollowUserError) {
             showSnackBar(context, state.message, isError: true);
-          } else if (state is UnfollowUserSuccess ||
-              state is FollowUserSuccess) {
-            _fetchFollowerDetails(); // Refetch follower details to update UI
           }
         },
         builder: (context, state) {
@@ -109,6 +79,8 @@ class _FollowerPageState extends State<FollowerPage> {
             return const Loader();
           } else if (state is GetFollowerDetailSuccess) {
             final follower = state.follower;
+            final isFollowing = follower.isFollowed ?? false;
+            final isOwnProfile = widget.otherId == _currentUserId;
 
             return Center(
               child: Column(
@@ -193,9 +165,8 @@ class _FollowerPageState extends State<FollowerPage> {
                   ),
                   const SizedBox(height: 10.0),
                   if (!isOwnProfile) ...[
-                    // Only display this if the profile being viewed follows the current user
-                    if (follower.isFollowed ?? false)
-                      Text('This user is following you'),
+                    if (follower.isFollowingYou == true)
+                      const Text('This user is following you'),
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: _toggleFollow,
@@ -215,3 +186,4 @@ class _FollowerPageState extends State<FollowerPage> {
     );
   }
 }
+

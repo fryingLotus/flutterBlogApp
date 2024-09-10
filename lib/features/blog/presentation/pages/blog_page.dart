@@ -35,7 +35,7 @@ class _BlogPageState extends State<BlogPage> {
   }
 
   Future<void> _openLikesBox() async {
-    _likesBox = Hive.box<bool>(name: 'likesBox');
+    _likesBox = await Hive.box<bool>(name: 'likesBox');
   }
 
   Future<void> _fetchPage(int pageKey) async {
@@ -77,7 +77,14 @@ class _BlogPageState extends State<BlogPage> {
         context.read<BlogBloc>().add(BlogLike(blogId: blogId));
       }
 
+      // Update the local Hive box
       _likesBox.put(blogId, !isLiked);
+
+      // Optionally, refetch to update the UI with the latest blog data
+      // This is useful if the like count is not updated immediately
+      context
+          .read<BlogBloc>()
+          .add(BlogFetchAllBlogs(page: 1, pageSize: _pageSize));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
@@ -135,8 +142,8 @@ class _BlogPageState extends State<BlogPage> {
       builderDelegate: PagedChildBuilderDelegate<Blog>(
         itemBuilder: (context, blog, index) {
           final isLiked = _likesBox.get(blog.id, defaultValue: false) ?? false;
-          final updatedLikesCount =
-              isLiked ? (blog.likes_count ?? 0) + 1 : (blog.likes_count ?? 0);
+          final updatedLikesCount = blog.likes_count ??
+              0; // Use the latest count from the blog object
 
           return BlogCard(
             key: ValueKey(blog.id),
@@ -145,7 +152,7 @@ class _BlogPageState extends State<BlogPage> {
             isLiked: isLiked,
             onToggleLike: () async {
               await _toggleLike(blog.id, isLiked);
-              setState(() {});
+              setState(() {}); // Ensure UI updates with the latest state
             },
           );
         },
@@ -153,3 +160,4 @@ class _BlogPageState extends State<BlogPage> {
     );
   }
 }
+
