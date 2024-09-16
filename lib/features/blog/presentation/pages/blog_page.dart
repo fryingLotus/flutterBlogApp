@@ -1,4 +1,7 @@
+import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
+import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
@@ -35,7 +38,7 @@ class _BlogPageState extends State<BlogPage> {
   }
 
   Future<void> _openLikesBox() async {
-    _likesBox = await Hive.box<bool>(name: 'likesBox');
+    _likesBox = Hive.box<bool>(name: 'likesBox');
   }
 
   Future<void> _fetchPage(int pageKey) async {
@@ -46,15 +49,19 @@ class _BlogPageState extends State<BlogPage> {
       bloc.stream
           .firstWhere((state) => state is BlogsDisplaySuccess)
           .then((state) {
-        if (!mounted) return;
+        if (!mounted) return; // Ensure the widget is still mounted
 
         final newItems = (state as BlogsDisplaySuccess).blogs;
+
+        // Filter out duplicate blogs
         final filteredItems = newItems
             .where((blog) => !_loadedBlogIds.contains(blog.id))
             .toList();
 
+        // Add the new unique blog IDs to the set
         _loadedBlogIds.addAll(filteredItems.map((blog) => blog.id));
         final isLastPage = filteredItems.length < _pageSize;
+        print('Filtered Items: ${filteredItems.length}');
         if (isLastPage) {
           _pagingController.appendLastPage(filteredItems);
         } else {
@@ -71,24 +78,24 @@ class _BlogPageState extends State<BlogPage> {
 
   Future<void> _toggleLike(String blogId, bool isLiked) async {
     try {
+      final userId =
+          (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+      final String uniqueKey = '${userId}_$blogId';
+
+      // Dispatch the appropriate event based on the current like status
       if (isLiked) {
         context.read<BlogBloc>().add(BlogUnlike(blogId: blogId));
       } else {
         context.read<BlogBloc>().add(BlogLike(blogId: blogId));
       }
 
-      // Update the local Hive box
-      _likesBox.put(blogId, !isLiked);
+      // Update local storage immediately
+      _likesBox.put(uniqueKey, !isLiked);
 
-      // Optionally, refetch to update the UI with the latest blog data
-      // This is useful if the like count is not updated immediately
-      context
-          .read<BlogBloc>()
-          .add(BlogFetchAllBlogs(page: 1, pageSize: _pageSize));
+      // Refresh the UI for the specific blog card
+      setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: $e')),
-      );
+      showSnackBar(context, "An error has occured", isError: true);
     }
   }
 
@@ -100,64 +107,47 @@ class _BlogPageState extends State<BlogPage> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          centerTitle: true,
-          title: const Text('D I B L O G'),
-          actions: [
-            IconButton(
-              onPressed: () {
-                Navigator.push(context, AddNewBlogPage.route());
-              },
-              icon: const Icon(CupertinoIcons.add_circled),
-            )
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'For You'),
-              Tab(
-                child: Center(
-                  child: Text('Following'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildBlogListView(), // Tab 1: All Blogs
-            Center(child: Text('Blog')), // Tab 2: Blog centered text
-          ],
-        ),
-        drawer: const MyDrawer(),
-      ),
-    );
-  }
-
-  Widget _buildBlogListView() {
-    return PagedListView<int, Blog>(
-      pagingController: _pagingController,
-      builderDelegate: PagedChildBuilderDelegate<Blog>(
-        itemBuilder: (context, blog, index) {
-          final isLiked = _likesBox.get(blog.id, defaultValue: false) ?? false;
-          final updatedLikesCount = blog.likes_count ??
-              0; // Use the latest count from the blog object
-
-          return BlogCard(
-            key: ValueKey(blog.id),
-            blog: blog.copyWith(likes_count: updatedLikesCount),
-            color: index % 2 == 0 ? AppPallete.gradient1 : AppPallete.gradient2,
-            isLiked: isLiked,
-            onToggleLike: () async {
-              await _toggleLike(blog.id, isLiked);
-              setState(() {}); // Ensure UI updates with the latest state
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('D I B L O G'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(context, AddNewBlogPage.route());
             },
-          );
-        },
+            icon: const Icon(CupertinoIcons.add_circled),
+          )
+        ],
       ),
+      body: PagedListView<int, Blog>(
+        pagingController: _pagingController,
+        builderDelegate: PagedChildBuilderDelegate<Blog>(
+          itemBuilder: (context, blog, index) {
+            final String userId =
+                (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+            final String uniqueKey = '${userId}_${blog.id}';
+
+            // Check if the blog is liked from the local storage (Hive)
+            final isLiked =
+                _likesBox.get(uniqueKey, defaultValue: false) ?? false;
+            final updatedLikesCount =
+                isLiked ? (blog.likes_count ?? 0) + 1 : (blog.likes_count ?? 0);
+
+            return BlogCard(
+              key: ValueKey(blog.id),
+              blog: blog.copyWith(likes_count: updatedLikesCount),
+              color:
+                  index % 2 == 0 ? AppPallete.gradient1 : AppPallete.gradient2,
+              isLiked: isLiked,
+              onToggleLike: () async {
+                await _toggleLike(blog.id, isLiked);
+              },
+            );
+          },
+        ),
+      ),
+      drawer: const MyDrawer(),
     );
   }
 }
-

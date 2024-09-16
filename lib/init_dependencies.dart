@@ -14,6 +14,7 @@ import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/follow_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/get_follower_detail.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/get_followers.dart';
+import 'package:blogapp/features/auth/domain/usecases/follower/get_following_list.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/unfollow_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/resend_verification_email.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_profile_picture.dart';

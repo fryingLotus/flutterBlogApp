@@ -1,6 +1,7 @@
 import 'package:blogapp/features/auth/domain/entities/follower.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/follow_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/get_follower_detail.dart';
+import 'package:blogapp/features/auth/domain/usecases/follower/get_following_list.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/unfollow_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/follower/get_followers.dart';
 import 'package:flutter/material.dart';
@@ -12,12 +13,14 @@ class FollowUserCubit extends Cubit<FollowUserState> {
   final FollowUser followUserUseCase;
   final UnfollowUser unfollowUserUseCase;
   final GetFollowers getFollowersUseCase;
-  final GetFollowerDetail getFollowerDetailUseCase; // Updated variable name
+  final GetFollowerDetail getFollowerDetailUseCase;
+  final GetFollowingList getFollowingListUseCase;
 
   FollowUserCubit(
     this.followUserUseCase,
     this.unfollowUserUseCase,
     this.getFollowersUseCase,
+    this.getFollowingListUseCase,
     this.getFollowerDetailUseCase, // Include in constructor
   ) : super(FollowUserInitial());
 
@@ -52,7 +55,10 @@ class FollowUserCubit extends Cubit<FollowUserState> {
     final result =
         await getFollowersUseCase(GetFollowersParams(userId: userId));
     result.fold(
-      (failure) => emit(FollowUserError(failure.message)),
+      (failure) {
+        print(failure.message.toString());
+        emit(FollowUserError(failure.message));
+      },
       (followers) => emit(GetFollowersSuccess(followers)),
     );
   }
@@ -70,6 +76,22 @@ class FollowUserCubit extends Cubit<FollowUserState> {
       },
       (follower) {
         emit(GetFollowerDetailSuccess(follower));
+      },
+    );
+  }
+
+  Future<void> getFollowingList(String userId) async {
+    emit(FollowUserLoading());
+    final result =
+        await getFollowingListUseCase(GetFollowingListParams(userId: userId));
+
+    result.fold(
+      (failure) {
+        print(failure.message.toString());
+        emit(FollowUserError(failure.message));
+      },
+      (followers) {
+        emit(GetFollowingListSuccess(followers));
       },
     );
   }

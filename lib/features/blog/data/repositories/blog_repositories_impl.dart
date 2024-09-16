@@ -67,13 +67,13 @@ class BlogRepositoriesImpl implements BlogRepository {
   }
 
   @override
-  Future<Either<Failures, List<Blog>>> getUserBlogs() async {
+  Future<Either<Failures, List<Blog>>> getUserBlogs(String userId) async {
     try {
       if (!await (connectionChecker.isConnected)) {
         final blogs = blogLocalDataSource.loadBlogs();
         return right(blogs);
       }
-      final blogs = await blogRemoteDataSource.getUserBlogs();
+      final blogs = await blogRemoteDataSource.getUserBlogs(userId);
       blogLocalDataSource.uploadLocalBlog(blogs: blogs);
       return right(blogs);
     } on ServerException catch (e) {

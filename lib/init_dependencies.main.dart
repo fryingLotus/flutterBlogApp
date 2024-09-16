@@ -153,10 +153,12 @@ void _initFollower() {
     ..registerFactory(() => FollowUser(serviceLocator()))
     ..registerFactory(() => UnfollowUser(serviceLocator()))
     ..registerFactory(() => GetFollowers(serviceLocator()))
+    ..registerFactory(() => GetFollowingList(serviceLocator()))
     ..registerFactory(() => GetFollowerDetail(serviceLocator()));
 
   // Registering the cubit
   serviceLocator.registerLazySingleton(() => FollowUserCubit(
+        serviceLocator(),
         serviceLocator(),
         serviceLocator(),
         serviceLocator(),

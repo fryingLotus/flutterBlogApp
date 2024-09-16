@@ -108,7 +108,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   void _onFetchUserBlog(
       BlogFetchUserBlogs event, Emitter<BlogState> emit) async {
     emit(BlogLoading());
-    final res = await _getUserBlogs(NoParams());
+    final res = await _getUserBlogs(GetUserBlogsParams(userId: event.userId));
     res.fold(
       (l) => emit(BlogFailure(l.message)),
       (r) {
@@ -140,6 +140,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   }
 
   void _onLikeBlog(BlogLike event, Emitter<BlogState> emit) async {
+    print("Like!");
     final res = await _likeBlog(LikeBlogParams(blogId: event.blogId));
     res.fold(
       (l) {
@@ -155,6 +156,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   }
 
   void _onUnlikeBlog(BlogUnlike event, Emitter<BlogState> emit) async {
+    print("unlike!");
     final res = await _unlikeBlog(UnlikeBlogParams(blogId: event.blogId));
     res.fold(
       (l) {

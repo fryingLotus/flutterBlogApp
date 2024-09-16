@@ -11,7 +11,7 @@ abstract interface class BlogRemoteDataSource {
     required BlogModel blog,
   });
   Future<List<BlogModel>> getAllBlogs({int page = 1, int pageSize = 10});
-  Future<List<BlogModel>> getUserBlogs();
+  Future<List<BlogModel>> getUserBlogs(String userId);
   Future<void> deleteBlog(String blogId);
   Future<BlogModel> updateBlog(BlogModel blog);
   Future<void> likeBlog(String blogId);
@@ -75,13 +75,12 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   }
 
   @override
-  Future<List<BlogModel>> getUserBlogs() async {
+  Future<List<BlogModel>> getUserBlogs(String userId) async {
     try {
-      final userId = supabaseClient.auth.currentUser?.id;
       final blogs = await supabaseClient
           .from('blogs')
           .select('*,profiles (name)')
-          .eq('poster_id', userId!);
+          .eq('poster_id', userId);
       return blogs
           .map((blog) => BlogModel.fromJson(blog)
               .copyWith(posterName: blog['profiles']['name']))
@@ -130,7 +129,7 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   Future<void> likeBlog(String blogId) async {
     try {
       final userId = supabaseClient.auth.currentUser?.id;
-
+      print("blogId ${blogId}");
       await supabaseClient.rpc('like_blog_or_comment', params: {
         'p_poster_id': userId,
         'p_blog_id': blogId,

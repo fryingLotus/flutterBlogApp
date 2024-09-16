@@ -7,6 +7,7 @@ abstract class FollowerRemoteDataSource {
   Future<FollowerModel> followUser(FollowerModel follower);
   Future<void> unfollowUser(String userIdToUnfollow);
   Future<List<FollowerModel>> getFollowers(String userId);
+  Future<List<FollowerModel>> getFollowingList(String userId);
   Future<FollowerModel> getFollowerDetail(String followerId);
 }
 
@@ -50,10 +51,7 @@ class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
   Future<List<FollowerModel>> getFollowers(String userId) async {
     try {
       final response = await supabaseClient
-          .from('followers')
-          .select('profiles(id, name, avatar_url)')
-          .eq('followed_id', userId);
-
+          .rpc('get_followers', params: {'user_id': userId});
       return (response as List)
           .map((json) => FollowerModel.fromJson(json))
           .toList();
@@ -78,6 +76,23 @@ class FollowerRemoteDataSourceImpl implements FollowerRemoteDataSource {
       }
 
       return FollowerModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<FollowerModel>> getFollowingList(String userId) async {
+    try {
+      final response = await supabaseClient.rpc('get_following_list', params: {
+        'user_id': userId,
+      });
+
+      return (response as List)
+          .map((json) => FollowerModel.fromJson(json))
+          .toList();
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

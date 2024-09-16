@@ -10,5 +10,6 @@ abstract interface class FollowerRepository {
   Future<Either<Failures, void>> unfollowUser(String userIdToUnfollow);
 
   Future<Either<Failures, List<Follower>>> getFollowers(String userId);
+  Future<Either<Failures, List<Follower>>> getFollowingList(String userId);
   Future<Either<Failures, Follower>> getFollowerDetail(String followerId);
 }

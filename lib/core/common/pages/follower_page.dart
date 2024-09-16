@@ -1,7 +1,11 @@
 import 'package:blogapp/core/common/cubits/app_follower_cubit/follower_cubit.dart';
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:blogapp/core/common/pages/subpage/list_followers_page.dart'; // Import the correct page
+import 'package:blogapp/core/common/pages/subpage/list_following_page.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
+import 'package:blogapp/features/blog/presentation/pages/blog_owned_page.dart';
+import 'package:blogapp/features/blog/presentation/widgets/blog_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -58,6 +62,36 @@ class _FollowerPageState extends State<FollowerPage> {
   Future<void> _unfollowUser() async {
     final cubit = context.read<FollowUserCubit>();
     await cubit.unfollowUser(widget.otherId);
+  }
+
+  // Method to handle navigation and update
+  void _navigateToListFollowersPage() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ListFollowersPage(
+          otherId: widget.otherId,
+        ),
+      ),
+    );
+    _fetchFollowerDetails();
+  }
+
+  void _navigateToFollowingListPage() async {
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ListFollowingPage(otherId: widget.otherId)));
+    _fetchFollowerDetails();
+  }
+
+  void _navigateToBlogPage() async {
+    print("blog user id ${widget.otherId}");
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => BlogOwnedPage(userId: widget.otherId)));
+    _fetchFollowerDetails();
   }
 
   @override
@@ -119,9 +153,12 @@ class _FollowerPageState extends State<FollowerPage> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 5.0),
-                              const Text(
-                                'User Follows',
-                                textAlign: TextAlign.center,
+                              GestureDetector(
+                                onTap: _navigateToFollowingListPage,
+                                child: const Text(
+                                  'User Follows',
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ],
                           ),
@@ -136,9 +173,12 @@ class _FollowerPageState extends State<FollowerPage> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 5.0),
-                              const Text(
-                                'Follower Count',
-                                textAlign: TextAlign.center,
+                              GestureDetector(
+                                onTap: _navigateToListFollowersPage,
+                                child: const Text(
+                                  'Follower Count',
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ],
                           ),
@@ -153,9 +193,12 @@ class _FollowerPageState extends State<FollowerPage> {
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: 5.0),
-                              const Text(
-                                'Blogs Count',
-                                textAlign: TextAlign.center,
+                              GestureDetector(
+                                onTap: _navigateToBlogPage,
+                                child: const Text(
+                                  'Blogs Count',
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ],
                           ),
@@ -183,7 +226,7 @@ class _FollowerPageState extends State<FollowerPage> {
           }
         },
       ),
+      drawer: const MyDrawer(),
     );
   }
 }
-

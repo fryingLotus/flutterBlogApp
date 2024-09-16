@@ -1,5 +1,7 @@
 import 'package:blogapp/core/common/cubits/app_theme/theme_cubit.dart';
 import 'package:blogapp/core/common/cubits/app_theme/theme_state.dart';
+import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:blogapp/core/common/pages/follower_page.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
@@ -17,6 +19,8 @@ class MyDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDarkMode = context.select(
         (ThemeCubit cubit) => cubit.state.themeMode == ThemeModeType.dark);
+    final userId =
+        (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
 
     return Drawer(
       backgroundColor: isDarkMode
@@ -42,7 +46,7 @@ class MyDrawer extends StatelessWidget {
             leading: const Icon(Icons.book),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, BlogOwnedPage.route());
+              Navigator.push(context, BlogOwnedPage.route(userId));
             },
           ),
           DrawerTile(
@@ -53,6 +57,20 @@ class MyDrawer extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
+          DrawerTile(
+            title: "Profile",
+            leading: const Icon(Icons.verified_user),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => FollowerPage(
+                          otherId: userId,
+                        )),
               );
             },
           ),
@@ -80,4 +98,3 @@ class MyDrawer extends StatelessWidget {
     );
   }
 }
-

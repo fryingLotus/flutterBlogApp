@@ -44,9 +44,9 @@ class FollowerRepositoryImpl implements FollowerRepository {
   @override
   Future<Either<Failures, List<Follower>>> getFollowers(String userId) async {
     try {
-      if (!await connectionChecker.isConnected) {
-        return left(Failures('No Internet Connection!'));
-      }
+      //if (!await connectionChecker.isConnected) {
+      //  return left(Failures('No Internet Connection!'));
+      //}
 
       final followers = await followerRemoteDataSource.getFollowers(userId);
       return right(followers.map((model) => model as Follower).toList());
@@ -77,14 +77,27 @@ class FollowerRepositoryImpl implements FollowerRepository {
   Future<Either<Failures, Follower>> getFollowerDetail(
       String followerId) async {
     try {
-      if (!await connectionChecker.isConnected) {
-        return left(Failures('No Internet Connection!'));
-      }
+      //if (!await connectionChecker.isConnected) {
+      //  return left(Failures('No Internet Connection!'));
+      //}
 
       final FollowerModel followerModel =
           await followerRemoteDataSource.getFollowerDetail(followerId);
 
       return right(followerModel);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failures, List<Follower>>> getFollowingList(
+      String userId) async {
+    try {
+      final followers = await followerRemoteDataSource.getFollowingList(userId);
+      return right(followers.map((model) => model as Follower).toList());
     } on ServerException catch (e) {
       return left(Failures(e.message));
     } catch (e) {

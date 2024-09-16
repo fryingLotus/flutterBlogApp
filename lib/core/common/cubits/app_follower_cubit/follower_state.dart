@@ -17,6 +17,12 @@ final class GetFollowerDetailSuccess extends FollowUserState {
   GetFollowerDetailSuccess(this.follower);
 }
 
+final class GetFollowingListSuccess extends FollowUserState {
+  final List<Follower> followers;
+
+  GetFollowingListSuccess(this.followers);
+}
+
 final class FollowUserError extends FollowUserState {
   final String message;
   FollowUserError(this.message);
