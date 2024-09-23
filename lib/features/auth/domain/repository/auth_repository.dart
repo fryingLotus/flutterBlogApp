@@ -25,4 +25,10 @@ abstract interface class AuthRepository {
   Future<Either<Failures, User>> updateProfilePicture({
     required File avatarImage,
   });
+  Future<Either<Failures, void>> sendPasswordResetEmail(
+      {required String email});
+  Future<Either<Failures, void>> resetPassword(
+      {required String email,
+      required String code,
+      required String newPassword});
 }

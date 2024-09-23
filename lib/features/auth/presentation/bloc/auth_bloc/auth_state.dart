@@ -27,3 +27,7 @@ final class AuthSuccessMessage extends AuthState {
 final class AuthEmailVerifiedSuccess extends AuthState {}
 
 final class AuthEmailNotVerified extends AuthState {}
+
+final class AuthResetPasswordResetSuccess extends AuthState {}
+
+final class AuthResetPawwordSuccess extends AuthState {}

@@ -6,6 +6,8 @@ import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/features/auth/domain/usecases/check_email_verified.dart';
 import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/resend_verification_email.dart';
+import 'package:blogapp/features/auth/domain/usecases/reset_password.dart';
+import 'package:blogapp/features/auth/domain/usecases/send_password_reset.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_profile_picture.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_login.dart';
@@ -27,6 +29,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CheckEmailVerified _checkEmailVerified;
   final ResendVerificationEmail _resendVerificationEmail;
   final UpdateProfilePicture _updateProfilePicture;
+  final SendPasswordReset _sendPasswordReset;
+  final ResetPassword _resetPassword;
 
   AuthBloc({
     required UserSignUp userSignUp,
@@ -38,6 +42,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required CheckEmailVerified checkEmailVerified,
     required ResendVerificationEmail resendVerificationEmail,
     required UpdateProfilePicture updateProfilePicture,
+    required SendPasswordReset sendPasswordReset,
+    required ResetPassword resetPassword,
   })  : _userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
@@ -47,6 +53,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _checkEmailVerified = checkEmailVerified,
         _resendVerificationEmail = resendVerificationEmail,
         _updateProfilePicture = updateProfilePicture,
+        _sendPasswordReset = sendPasswordReset,
+        _resetPassword = resetPassword,
         super(AuthInitial()) {
     on<AuthSignUp>(_onAuthSignUp);
     on<AuthLogin>(_onAuthLogin);
@@ -56,6 +64,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthCheckEmailVerified>(_onAuthCheckEmailVerified);
     on<AuthResendVerificationEmail>(_onAuthResendVerificationEmail);
     on<AuthUpdateProfilePicture>(_onAuthUpdateProfilePicture);
+    on<AuthSendPasswordReset>(_onAuthSendPasswordReset);
+    on<AuthResetPassword>(_onAuthResetPassword);
   }
   void _onAuthSignUp(AuthSignUp event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
@@ -146,19 +156,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthCheckEmailVerified event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
 
-    final response = await _checkEmailVerified(NoParams());
-    response.fold(
+    // First, get the current user session
+    final currentUserResponse = await _currentUser(NoParams());
+    currentUserResponse.fold(
       (failure) {
         emit(AuthFailure(failure.message));
       },
-      (isVerified) {
-        if (isVerified) {
-          // Email is verified, navigate to blog page
-          emit(AuthEmailVerifiedSuccess());
-        } else {
-          // Email not verified yet, update UI accordingly
-          emit(AuthEmailNotVerified());
-        }
+      (user) async {
+        // Now check if the email is verified
+        final response = await _checkEmailVerified(NoParams());
+        response.fold(
+          (failure) {
+            emit(AuthFailure(failure.message));
+          },
+          (isVerified) {
+            if (isVerified) {
+              // Email is verified, navigate to blog page
+              emit(AuthEmailVerifiedSuccess());
+            } else {
+              // Email not verified yet, update UI accordingly
+              emit(AuthEmailNotVerified());
+            }
+          },
+        );
       },
     );
   }
@@ -172,6 +192,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     response.fold(
       (failure) {
+        print("resend" + failure.message.toString());
         emit(AuthFailure(failure.message));
       },
       (_) {
@@ -192,6 +213,37 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (user) {
         _emitAuthSuccess(user, emit);
+      },
+    );
+  }
+
+  void _onAuthSendPasswordReset(
+      AuthSendPasswordReset event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final response =
+        await _sendPasswordReset(SendPasswordResetParams(email: event.email));
+
+    response.fold(
+      (failure) {
+        emit(AuthFailure(failure.message));
+      },
+      (_) {
+        emit(const AuthSuccessMessage("Password Reset Sent to email"));
+      },
+    );
+  }
+
+  void _onAuthResetPassword(
+      AuthResetPassword event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final response = await _resetPassword(ResetPasswordParams(
+        email: event.email, code: event.code, newPassword: event.password));
+    response.fold(
+      (failure) {
+        emit(AuthFailure(failure.message));
+      },
+      (_) {
+        emit(const AuthSuccessMessage("Succesfully updated password"));
       },
     );
   }

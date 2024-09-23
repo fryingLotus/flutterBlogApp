@@ -141,4 +141,33 @@ class AuthRepositoryImpl implements AuthRepository {
       return left(Failures(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failures, void>> sendPasswordResetEmail(
+      {required String email}) async {
+    try {
+      await remoteDataSource.sendPasswordResetEmail(email: email);
+      return right(unit);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failures, void>> resetPassword(
+      {required String email,
+      required String code,
+      required String newPassword}) async {
+    try {
+      await remoteDataSource.resetPassword(
+          email: email, code: code, newPassword: newPassword);
+      return right(unit);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    } catch (e) {
+      return left(Failures(e.toString()));
+    }
+  }
 }

@@ -43,6 +43,11 @@ abstract interface class AuthRemoteDataSource {
     required File image,
     required UserModel user,
   });
+  Future<void> sendPasswordResetEmail({required String email});
+  Future<void> resetPassword(
+      {required String email,
+      required String code,
+      required String newPassword});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -189,13 +194,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       await supabaseClient.auth.resend(
-        type: OtpType.email,
+        type: OtpType.signup,
         email: email,
-        emailRedirectTo: 'io.supabase.flutterquickstart://login-callback/',
       );
     } on AuthException catch (e) {
+      print("AuthException: ${e.message}");
       throw ServerException(e.message);
     } catch (e) {
+      print("General exception: $e");
       throw ServerException(e.toString());
     }
   }
@@ -203,8 +209,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<bool> checkEmailVerified() async {
     try {
-      final response = await supabaseClient.auth.refreshSession();
-      final user = response.user;
+      final user = supabaseClient.auth.currentUser;
 
       return user?.emailConfirmedAt != null;
     } catch (e) {
@@ -249,6 +254,54 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException(e.message);
     } catch (e) {
       throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    try {
+      await supabaseClient.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      // Verify OTP
+      await supabaseClient.auth.verifyOTP(
+        type: OtpType.recovery,
+        email: email,
+        token: code,
+      );
+
+      // Update password
+      final updateResponse = await supabaseClient.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+
+      // Check if the update was successful
+      if (updateResponse.user == null) {
+        throw const ServerException('Failed to update password');
+      }
+    } on AuthException catch (e) {
+      switch (e.message) {
+        case 'Invalid otp':
+          throw const ServerException('Invalid verification code');
+        case 'User not found':
+          throw const ServerException('User not found');
+        default:
+          throw ServerException('Authentication error: ${e.message}');
+      }
+    } catch (e) {
+      throw ServerException('Unexpected error: ${e.toString()}');
     }
   }
 }

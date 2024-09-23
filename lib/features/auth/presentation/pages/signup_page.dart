@@ -3,10 +3,8 @@ import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
-import 'package:blogapp/features/auth/presentation/pages/verify_email_page.dart';
 import 'package:blogapp/features/auth/presentation/widgets/auth_field.dart';
 import 'package:blogapp/features/auth/presentation/widgets/auth_gradient_button.dart';
-import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -53,11 +51,9 @@ class _SignupPageState extends State<SignupPage> {
             } else if (state is AuthSuccess) {
               showSnackBar(
                   context, 'Please verify your email before proceeding.');
-              Navigator.pushAndRemoveUntil(
+              Navigator.pushReplacement(
                 context,
-                VerifyEmailPage
-                    .route(), // This is a new page for email verification
-                (route) => false,
+                LoginPage.route(),
               );
             }
           },

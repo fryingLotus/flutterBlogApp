@@ -38,10 +38,25 @@ class AuthResendVerificationEmail extends AuthEvent {
   AuthResendVerificationEmail({required this.email});
 }
 
+class AuthSendPasswordReset extends AuthEvent {
+  final String email;
+
+  AuthSendPasswordReset({required this.email});
+}
+
 class AuthCheckEmailVerified extends AuthEvent {}
 
 class AuthUpdateProfilePicture extends AuthEvent {
   final File avatarImage;
 
   AuthUpdateProfilePicture({required this.avatarImage});
+}
+
+class AuthResetPassword extends AuthEvent {
+  final String email;
+  final String code;
+  final String password;
+
+  AuthResetPassword(
+      {required this.email, required this.code, required this.password});
 }
