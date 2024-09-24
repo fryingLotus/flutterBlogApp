@@ -1,8 +1,10 @@
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
+import 'package:blogapp/features/auth/presentation/widgets/auth_gradient_button.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   static MaterialPageRoute route() =>
@@ -17,16 +19,20 @@ class VerifyEmailPage extends StatefulWidget {
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthSuccessMessage) {
+          showSnackBar(context, state.message);
+        } else if (state is AuthFailure) {
+          showSnackBar(context, 'Error: ${state.message}', isError: true);
+        }
+      },
       builder: (context, state) {
         final appUserState = context.read<AppUserCubit>().state;
 
-        // Check if the user is logged in and user data is available
         if (appUserState is! AppUserLoggedIn) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Loader(),
           );
         }
 
@@ -44,28 +50,17 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
                 children: [
                   Text('Email: $email'),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Trigger event to check if the email is verified
-                      context.read<AuthBloc>().add(AuthCheckEmailVerified());
-                    },
-                    child: const Text('Check Email Verification'),
-                  ),
-                  BlocListener<AuthBloc, AuthState>(
-                    listener: (context, state) {
-                      if (state is AuthEmailVerifiedSuccess) {
-                        showSnackBar(context, 'Email verification successful!');
-                      } else if (state is AuthEmailNotVerified) {
-                        showSnackBar(
-                            context, 'Email is not verified. Please verify.',
-                            isError: true);
-                      } else if (state is AuthFailure) {
-                        showSnackBar(context, 'Error: ${state.message}',
-                            isError: true);
-                      }
-                    },
-                    child: const SizedBox.shrink(),
-                  ),
+                  state is AuthLoading
+                      ? const Loader()
+                      : AuthGradientButton(
+                          text: 'Resend Verification Email',
+                          onPressed: () {
+                            // Trigger event to resend the verification email
+                            context
+                                .read<AuthBloc>()
+                                .add(AuthResendVerificationEmail(email: email));
+                          },
+                        ),
                 ],
               ),
             ),

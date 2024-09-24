@@ -1,4 +1,5 @@
 import 'package:blogapp/core/common/widgets/loader.dart';
+import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/widgets/auth_gradient_button.dart';
@@ -35,14 +36,8 @@ class _PincodePageState extends State<PincodePage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccessMessage) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
             showSnackBar(context, state.message);
           } else if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
             showSnackBar(context, state.message, isError: true);
           }
         },
@@ -50,7 +45,7 @@ class _PincodePageState extends State<PincodePage> {
           return Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   'Enter the PIN sent to your email (${widget.email})',
@@ -67,7 +62,12 @@ class _PincodePageState extends State<PincodePage> {
                     borderRadius: BorderRadius.circular(5),
                     fieldHeight: 50,
                     fieldWidth: 40,
-                    activeFillColor: Colors.white,
+                    activeFillColor: AppPallete.backgroundColor,
+                    inactiveFillColor: AppPallete.backgroundColor,
+                    inactiveColor: AppPallete.borderColor,
+                    selectedFillColor: AppPallete.greyColor,
+                    selectedColor: AppPallete.borderColor,
+                    activeColor: AppPallete.gradient1,
                   ),
                   animationDuration: const Duration(milliseconds: 300),
                   enableActiveFill: true,
@@ -91,7 +91,14 @@ class _PincodePageState extends State<PincodePage> {
                   obscureText: true,
                   decoration: const InputDecoration(
                     labelText: 'New Password',
+                    labelStyle: TextStyle(color: AppPallete.whiteColor),
                     border: OutlineInputBorder(),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppPallete.gradient1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: AppPallete.borderColor),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -117,6 +124,24 @@ class _PincodePageState extends State<PincodePage> {
                           }
                         },
                       ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () {
+                    // Trigger resend OTP code
+                    context
+                        .read<AuthBloc>()
+                        .add(AuthSendPasswordReset(email: widget.email));
+                  },
+                  child: const Text(
+                    'Resend OTP Code',
+                    style: TextStyle(
+                      color: AppPallete.whiteColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -125,4 +150,3 @@ class _PincodePageState extends State<PincodePage> {
     );
   }
 }
-
