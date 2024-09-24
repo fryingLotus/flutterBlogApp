@@ -34,6 +34,7 @@ import 'package:blogapp/features/blog/domain/repositories/blog_repository.dart';
 import 'package:blogapp/features/blog/domain/repositories/comment_repository.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/get_blogs_from_followed_user.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/like_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/unlike_blog.dart';

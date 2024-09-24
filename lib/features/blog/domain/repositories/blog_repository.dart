@@ -13,6 +13,9 @@ abstract interface class BlogRepository {
     required List<String> topics,
   });
   Future<Either<Failures, List<Blog>>> getAllBlogs({int page, int pageSize});
+
+  Future<Either<Failures, List<Blog>>> getBlogsFromFollowedUsers(
+      {int page, int pageSize});
   Future<Either<Failures, List<Blog>>> getUserBlogs(String userId);
   Future<Either<Failures, bool>> deleteBlog(String blogId);
 

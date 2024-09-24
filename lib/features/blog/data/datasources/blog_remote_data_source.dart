@@ -11,6 +11,9 @@ abstract interface class BlogRemoteDataSource {
     required BlogModel blog,
   });
   Future<List<BlogModel>> getAllBlogs({int page = 1, int pageSize = 10});
+
+  Future<List<BlogModel>> getBlogsFromFollowedUsers(
+      {int page = 1, int pageSize = 10});
   Future<List<BlogModel>> getUserBlogs(String userId);
   Future<void> deleteBlog(String blogId);
   Future<BlogModel> updateBlog(BlogModel blog);
@@ -152,6 +155,39 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
         'p_blog_id': blogId,
         'p_comment_id': null,
       });
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<BlogModel>> getBlogsFromFollowedUsers({
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final userId = supabaseClient.auth.currentUser?.id;
+
+      // Fetch the blogs
+      final response =
+          await supabaseClient.rpc('get_blogs_from_followed_users', params: {
+        'current_user_id': userId,
+        'page': page,
+        'page_size': pageSize,
+      });
+
+      // Check if the response is indeed a List<dynamic>
+      if (response is List) {
+        return response
+            .map((blog) => BlogModel.fromJson(blog).copyWith(
+                  posterName: blog['poster_name'],
+                ))
+            .toList();
+      } else {
+        throw Exception('Unexpected response type: ${response.runtimeType}');
+      }
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

@@ -16,16 +16,17 @@ class BlogModel extends Blog {
 
   factory BlogModel.fromJson(Map<String, dynamic> map) {
     return BlogModel(
-      id: map['id'] as String,
-      posterId: map['poster_id'] as String,
-      title: map['title'] as String,
-      content: map['content'] as String,
-      imageUrl: map['image_url'] as String,
+      id: map['id'] as String? ?? '', // Default to empty string if null
+      posterId: map['poster_id'] as String? ?? '',
+      title: map['title'] as String? ?? '',
+      content: map['content'] as String? ?? '',
+      imageUrl: map['image_url'] as String? ?? '', // Handle possible null
       topics: List<String>.from(map['topics'] ?? []),
       updatedAt: map['updated_at'] == null
           ? DateTime.now()
           : DateTime.parse(map['updated_at']),
-      likes_count: map['likes_count'] != null ? map['likes_count'] as int : 0,
+      likes_count: map['likes_count'] as int? ?? 0, // Handle possible null
+      posterName: map['poster_name'] as String? ?? "",
     );
   }
 
@@ -70,4 +71,3 @@ class BlogModel extends Blog {
     };
   }
 }
-

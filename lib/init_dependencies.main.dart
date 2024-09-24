@@ -92,6 +92,7 @@ void _initBlog() {
       ),
     )
     ..registerFactory(() => GetUserBlogs(serviceLocator()))
+    ..registerFactory(() => GetBlogsFromFollowedUser(serviceLocator()))
     ..registerFactory(() => DeleteBlog(serviceLocator()))
     ..registerFactory(() => UpdateBlog(serviceLocator()))
     ..registerFactory(() => LikeBlog(serviceLocator()))
@@ -101,6 +102,7 @@ void _initBlog() {
         uploadBlog: serviceLocator(),
         getAllBlogs: serviceLocator(),
         getUserBlogs: serviceLocator(),
+        getBlogsFromFollowedUser: serviceLocator(),
         deleteBlog: serviceLocator(),
         updateBlog: serviceLocator(),
         likeBlog: serviceLocator(),

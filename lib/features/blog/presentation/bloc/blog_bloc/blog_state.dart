@@ -39,6 +39,13 @@ final class BlogsDisplaySuccess extends BlogState {
   BlogsDisplaySuccess(this.blogs, {this.isLastPage = false});
 }
 
+final class BlogsDisplayUserFollowSuccess extends BlogState {
+  final List<Blog> blogs;
+  final bool isLastPage;
+
+  BlogsDisplayUserFollowSuccess(this.blogs, {this.isLastPage = false});
+}
+
 final class UserBlogsDisplaySuccess extends BlogState {
   final List<Blog> userBlogs;
 

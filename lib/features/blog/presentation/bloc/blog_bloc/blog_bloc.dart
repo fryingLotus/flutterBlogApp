@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/get_blogs_from_followed_user.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/like_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/unlike_blog.dart';
@@ -23,27 +23,31 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final UpdateBlog _updateBlog;
   final LikeBlog _likeBlog;
   final UnlikeBlog _unlikeBlog;
+  final GetBlogsFromFollowedUser _getBlogsFromFollowedUser;
   List<Blog>? _blogs;
-  BlogBloc({
-    required UploadBlog uploadBlog,
-    required GetAllBlogs getAllBlogs,
-    required DeleteBlog deleteBlog,
-    required GetUserBlogs getUserBlogs,
-    required UpdateBlog updateBlog,
-    required LikeBlog likeBlog,
-    required UnlikeBlog unlikeBlog,
-  })  : _uploadBlog = uploadBlog,
+  BlogBloc(
+      {required UploadBlog uploadBlog,
+      required GetAllBlogs getAllBlogs,
+      required DeleteBlog deleteBlog,
+      required GetUserBlogs getUserBlogs,
+      required UpdateBlog updateBlog,
+      required LikeBlog likeBlog,
+      required UnlikeBlog unlikeBlog,
+      required GetBlogsFromFollowedUser getBlogsFromFollowedUser})
+      : _uploadBlog = uploadBlog,
         _getAllBlogs = getAllBlogs,
         _getUserBlogs = getUserBlogs,
         _deleteBlog = deleteBlog,
         _likeBlog = likeBlog,
         _updateBlog = updateBlog,
         _unlikeBlog = unlikeBlog,
+        _getBlogsFromFollowedUser = getBlogsFromFollowedUser,
         super(BlogInitial()) {
     //on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
     on<BlogFetchAllBlogs>(_onFetchAllBlog);
     on<BlogFetchUserBlogs>(_onFetchUserBlog);
+    on<BlogFetchUserFollowBlogs>(_onBlogFetchUserFollowBlogs);
     on<BlogDelete>(_onDeleteBlog);
     on<BlogUpdate>(_onUpdateBlog);
     on<BlogLike>(_onLikeBlog);
@@ -103,6 +107,30 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
         },
       );
     }
+  }
+
+  void _onBlogFetchUserFollowBlogs(
+      BlogFetchUserFollowBlogs event, Emitter<BlogState> emit) async {
+    // Emit pagination loading state
+
+    // Fetch blogs from followed users
+    final res = await _getBlogsFromFollowedUser(
+      GetBlogsFromFollowedUserParams(
+          page: event.page, pageSize: event.pageSize),
+    );
+    print("Response: $res");
+    // Handle the response
+    res.fold(
+      (l) {
+        print("Error: " + l.message);
+
+        emit(BlogFailure(l.message));
+      },
+      (r) {
+        final isLastPage = r.length < event.pageSize;
+        emit(BlogsDisplayUserFollowSuccess(r, isLastPage: isLastPage));
+      },
+    );
   }
 
   void _onFetchUserBlog(

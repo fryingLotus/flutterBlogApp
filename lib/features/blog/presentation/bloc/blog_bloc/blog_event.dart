@@ -45,6 +45,13 @@ final class BlogFetchAllBlogs extends BlogEvent {
   BlogFetchAllBlogs({required this.page, required this.pageSize});
 }
 
+final class BlogFetchUserFollowBlogs extends BlogEvent {
+  final int page;
+  final int pageSize;
+
+  BlogFetchUserFollowBlogs({required this.page, required this.pageSize});
+}
+
 final class BlogFetchUserBlogs extends BlogEvent {
   final String userId;
 

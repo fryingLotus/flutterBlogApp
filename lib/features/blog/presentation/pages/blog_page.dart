@@ -21,19 +21,30 @@ class BlogPage extends StatefulWidget {
   State<BlogPage> createState() => _BlogPageState();
 }
 
-class _BlogPageState extends State<BlogPage> {
+class _BlogPageState extends State<BlogPage>
+    with SingleTickerProviderStateMixin {
   late Box<bool> _likesBox;
   static const int _pageSize = 10;
-  final PagingController<int, Blog> _pagingController =
+  late TabController _tabController;
+  final PagingController<int, Blog> _allBlogsPagingController =
       PagingController(firstPageKey: 1);
-  final Set<String> _loadedBlogIds = {};
+  final PagingController<int, Blog> _followedBlogsPagingController =
+      PagingController(firstPageKey: 1);
+  final Set<String> _loadedAllBlogIds = {};
+  final Set<String> _loadedFollowedBlogIds = {};
 
   @override
   void initState() {
     super.initState();
     _openLikesBox();
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage(pageKey);
+    _tabController = TabController(length: 2, vsync: this);
+
+    _allBlogsPagingController.addPageRequestListener((pageKey) {
+      _fetchAllBlogsPage(pageKey);
+    });
+
+    _followedBlogsPagingController.addPageRequestListener((pageKey) {
+      _fetchFollowedBlogsPage(pageKey);
     });
   }
 
@@ -41,7 +52,7 @@ class _BlogPageState extends State<BlogPage> {
     _likesBox = Hive.box<bool>(name: 'likesBox');
   }
 
-  Future<void> _fetchPage(int pageKey) async {
+  Future<void> _fetchAllBlogsPage(int pageKey) async {
     try {
       final bloc = context.read<BlogBloc>();
       bloc.add(BlogFetchAllBlogs(page: pageKey, pageSize: _pageSize));
@@ -55,23 +66,83 @@ class _BlogPageState extends State<BlogPage> {
 
         // Filter out duplicate blogs
         final filteredItems = newItems
-            .where((blog) => !_loadedBlogIds.contains(blog.id))
+            .where((blog) => !_loadedAllBlogIds.contains(blog.id))
             .toList();
 
         // Add the new unique blog IDs to the set
-        _loadedBlogIds.addAll(filteredItems.map((blog) => blog.id));
+        _loadedAllBlogIds.addAll(filteredItems.map((blog) => blog.id));
         final isLastPage = filteredItems.length < _pageSize;
-        print('Filtered Items: ${filteredItems.length}');
         if (isLastPage) {
-          _pagingController.appendLastPage(filteredItems);
+          _allBlogsPagingController.appendLastPage(filteredItems);
         } else {
           final nextPageKey = pageKey + 1;
-          _pagingController.appendPage(filteredItems, nextPageKey);
+          _allBlogsPagingController.appendPage(filteredItems, nextPageKey);
         }
       });
     } catch (error) {
       if (mounted) {
-        _pagingController.error = error;
+        _allBlogsPagingController.error = error;
+      }
+    }
+  }
+
+  Future<void> _fetchFollowedBlogsPage(int pageKey) async {
+    try {
+      final bloc = context.read<BlogBloc>();
+
+      print('Fetching blogs for page $pageKey');
+      // Dispatch the event to fetch followed blogs
+      bloc.add(BlogFetchUserFollowBlogs(page: pageKey, pageSize: _pageSize));
+
+      // Listen for the state
+      await for (final state in bloc.stream) {
+        if (state is BlogsDisplayUserFollowSuccess) {
+          if (!mounted) {
+            print('Widget not mounted');
+            return; // Ensure the widget is still mounted
+          }
+
+          final newItems = state.blogs; // This should be List<BlogModel>
+          print('Fetched blogs: ${newItems.length}');
+
+          // Log current loaded blog IDs
+          print('Loaded blog IDs: $_loadedFollowedBlogIds');
+
+          // Filter out duplicate blogs
+          final filteredItems = newItems
+              .where((blog) => !_loadedFollowedBlogIds.contains(blog.id))
+              .toList();
+          print('Filtered items: ${filteredItems.length}');
+
+          // Add the new unique blog IDs to the set
+          _loadedFollowedBlogIds.addAll(filteredItems.map((blog) => blog.id));
+
+          final isLastPage = filteredItems.length < _pageSize;
+          if (isLastPage) {
+            _followedBlogsPagingController.appendLastPage(filteredItems);
+            print('Last page reached');
+          } else {
+            final nextPageKey = pageKey + 1;
+            _followedBlogsPagingController.appendPage(
+                filteredItems, nextPageKey);
+            print('Next page key: $nextPageKey');
+          }
+
+          break; // Exit the loop after processing the successful state
+        } else if (state is BlogFailure) {
+          // Handle any error states if necessary
+          if (mounted) {
+            print('Error fetching followed blogs: ${state.error}');
+            _followedBlogsPagingController.error =
+                state.error; // Handle error accordingly
+          }
+          break; // Exit on error state
+        }
+      }
+    } catch (error) {
+      if (mounted) {
+        print('Error fetching followed blogs: $error');
+        _followedBlogsPagingController.error = error;
       }
     }
   }
@@ -95,13 +166,15 @@ class _BlogPageState extends State<BlogPage> {
       // Refresh the UI for the specific blog card
       setState(() {});
     } catch (e) {
-      showSnackBar(context, "An error has occured", isError: true);
+      showSnackBar(context, "An error has occurred", isError: true);
     }
   }
 
   @override
   void dispose() {
-    _pagingController.dispose();
+    _allBlogsPagingController.dispose();
+    _followedBlogsPagingController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -119,33 +192,80 @@ class _BlogPageState extends State<BlogPage> {
             icon: const Icon(CupertinoIcons.add_circled),
           )
         ],
-      ),
-      body: PagedListView<int, Blog>(
-        pagingController: _pagingController,
-        builderDelegate: PagedChildBuilderDelegate<Blog>(
-          itemBuilder: (context, blog, index) {
-            final String userId =
-                (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
-            final String uniqueKey = '${userId}_${blog.id}';
-
-            // Check if the blog is liked from the local storage (Hive)
-            final isLiked =
-                _likesBox.get(uniqueKey, defaultValue: false) ?? false;
-            final updatedLikesCount =
-                isLiked ? (blog.likes_count ?? 0) + 1 : (blog.likes_count ?? 0);
-
-            return BlogCard(
-              key: ValueKey(blog.id),
-              blog: blog.copyWith(likes_count: updatedLikesCount),
-              color:
-                  index % 2 == 0 ? AppPallete.gradient1 : AppPallete.gradient2,
-              isLiked: isLiked,
-              onToggleLike: () async {
-                await _toggleLike(blog.id, isLiked);
-              },
-            );
-          },
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'All Blogs'),
+            Tab(text: 'Following'),
+          ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          PagedListView<int, Blog>(
+            pagingController: _allBlogsPagingController,
+            builderDelegate: PagedChildBuilderDelegate<Blog>(
+              itemBuilder: (context, blog, index) {
+                final String userId =
+                    (context.read<AppUserCubit>().state as AppUserLoggedIn)
+                        .user
+                        .id;
+                final String uniqueKey = '${userId}_${blog.id}';
+
+                // Check if the blog is liked from the local storage (Hive)
+                final isLiked =
+                    _likesBox.get(uniqueKey, defaultValue: false) ?? false;
+                final updatedLikesCount = isLiked
+                    ? (blog.likes_count ?? 0) + 1
+                    : (blog.likes_count ?? 0);
+
+                return BlogCard(
+                  key: ValueKey(blog.id),
+                  blog: blog.copyWith(likes_count: updatedLikesCount),
+                  color: index % 2 == 0
+                      ? AppPallete.gradient1
+                      : AppPallete.gradient2,
+                  isLiked: isLiked,
+                  onToggleLike: () async {
+                    await _toggleLike(blog.id, isLiked);
+                  },
+                );
+              },
+            ),
+          ),
+          PagedListView<int, Blog>(
+            pagingController: _followedBlogsPagingController,
+            builderDelegate: PagedChildBuilderDelegate<Blog>(
+              itemBuilder: (context, blog, index) {
+                final String userId =
+                    (context.read<AppUserCubit>().state as AppUserLoggedIn)
+                        .user
+                        .id;
+                final String uniqueKey = '${userId}_${blog.id}';
+
+                // Check if the blog is liked from the local storage (Hive)
+                final isLiked =
+                    _likesBox.get(uniqueKey, defaultValue: false) ?? false;
+                final updatedLikesCount = isLiked
+                    ? (blog.likes_count ?? 0) + 1
+                    : (blog.likes_count ?? 0);
+
+                return BlogCard(
+                  key: ValueKey(blog.id),
+                  blog: blog.copyWith(likes_count: updatedLikesCount),
+                  color: index % 2 == 0
+                      ? AppPallete.gradient1
+                      : AppPallete.gradient2,
+                  isLiked: isLiked,
+                  onToggleLike: () async {
+                    await _toggleLike(blog.id, isLiked);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       drawer: const MyDrawer(),
     );
