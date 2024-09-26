@@ -91,7 +91,6 @@ class _BlogPageState extends State<BlogPage>
       final bloc = context.read<BlogBloc>();
 
       print('Fetching blogs for page $pageKey');
-      // Dispatch the event to fetch followed blogs
       bloc.add(BlogFetchUserFollowBlogs(page: pageKey, pageSize: _pageSize));
 
       // Listen for the state
@@ -271,3 +270,4 @@ class _BlogPageState extends State<BlogPage>
     );
   }
 }
+
