@@ -48,6 +48,7 @@ abstract interface class AuthRemoteDataSource {
       {required String email,
       required String code,
       required String newPassword});
+  Future<List<UserModel>> searchUsers({required String username});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -302,6 +303,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
     } catch (e) {
       throw ServerException('Unexpected error: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<UserModel>> searchUsers({required String username}) async {
+    try {
+      final users = await supabaseClient
+          .from('profiles')
+          .select()
+          .like('name', '%$username%');
+      return users
+          .map((user) => UserModel.fromJson(user)
+              .copyWith(name: user['name'], avatarUrl: user['avatar_url']))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } on AuthException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
     }
   }
 }

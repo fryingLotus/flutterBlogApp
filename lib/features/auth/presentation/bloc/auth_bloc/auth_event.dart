@@ -38,6 +38,12 @@ class AuthResendVerificationEmail extends AuthEvent {
   AuthResendVerificationEmail({required this.email});
 }
 
+class AuthSearchUser extends AuthEvent {
+  final String username;
+
+  AuthSearchUser({required this.username});
+}
+
 class AuthSendPasswordReset extends AuthEvent {
   final String email;
 

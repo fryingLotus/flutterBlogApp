@@ -24,6 +24,12 @@ final class AuthSuccessMessage extends AuthState {
   const AuthSuccessMessage(this.message);
 }
 
+final class AuthSearchSuccess extends AuthState {
+  final List<User> users;
+
+  const AuthSearchSuccess(this.users);
+}
+
 final class AuthEmailVerifiedSuccess extends AuthState {}
 
 final class AuthEmailNotVerified extends AuthState {}

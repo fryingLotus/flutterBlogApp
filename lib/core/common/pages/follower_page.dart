@@ -226,7 +226,6 @@ class _FollowerPageState extends State<FollowerPage> {
           }
         },
       ),
-      drawer: const MyDrawer(),
     );
   }
 }

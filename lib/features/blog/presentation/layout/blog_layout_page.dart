@@ -4,6 +4,9 @@ import 'package:blogapp/features/blog/presentation/pages/blog_search_page.dart';
 import 'package:flutter/material.dart';
 
 class BlogLayoutPage extends StatefulWidget {
+  static MaterialPageRoute route() => MaterialPageRoute(
+        builder: (context) => const BlogLayoutPage(),
+      );
   const BlogLayoutPage({super.key});
 
   @override
@@ -35,4 +38,3 @@ class _BlogLayoutPageState extends State<BlogLayoutPage> {
     );
   }
 }
-

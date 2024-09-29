@@ -7,6 +7,7 @@ import 'package:blogapp/features/auth/domain/usecases/check_email_verified.dart'
 import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/resend_verification_email.dart';
 import 'package:blogapp/features/auth/domain/usecases/reset_password.dart';
+import 'package:blogapp/features/auth/domain/usecases/search_users.dart';
 import 'package:blogapp/features/auth/domain/usecases/send_password_reset.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_profile_picture.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
@@ -31,6 +32,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UpdateProfilePicture _updateProfilePicture;
   final SendPasswordReset _sendPasswordReset;
   final ResetPassword _resetPassword;
+  final SearchUsers _searchUsers;
 
   AuthBloc({
     required UserSignUp userSignUp,
@@ -44,6 +46,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required UpdateProfilePicture updateProfilePicture,
     required SendPasswordReset sendPasswordReset,
     required ResetPassword resetPassword,
+    required SearchUsers searchUsers,
   })  : _userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
@@ -55,6 +58,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _updateProfilePicture = updateProfilePicture,
         _sendPasswordReset = sendPasswordReset,
         _resetPassword = resetPassword,
+        _searchUsers = searchUsers,
         super(AuthInitial()) {
     on<AuthSignUp>(_onAuthSignUp);
     on<AuthLogin>(_onAuthLogin);
@@ -66,6 +70,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUpdateProfilePicture>(_onAuthUpdateProfilePicture);
     on<AuthSendPasswordReset>(_onAuthSendPasswordReset);
     on<AuthResetPassword>(_onAuthResetPassword);
+    on<AuthSearchUser>(_onAuthSearchUser);
   }
   void _onAuthSignUp(AuthSignUp event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
@@ -244,6 +249,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (_) {
         emit(const AuthSuccessMessage("Succesfully updated password"));
+      },
+    );
+  }
+
+  void _onAuthSearchUser(AuthSearchUser event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final response =
+        await _searchUsers(SearchUsersParams(username: event.username));
+    response.fold(
+      (failure) {
+        emit(AuthFailure(failure.message));
+      },
+      (r) {
+        emit(AuthSearchSuccess(r));
       },
     );
   }

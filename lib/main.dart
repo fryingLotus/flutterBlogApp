@@ -7,7 +7,9 @@ import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
 import 'package:blogapp/features/auth/presentation/pages/reset_password_page.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/bloc/comment_bloc/comment_bloc.dart';
+import 'package:blogapp/features/blog/presentation/layout/blog_layout_page.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
+import 'package:blogapp/features/blog/presentation/pages/blog_search_page.dart';
 import 'package:blogapp/init_dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -61,25 +63,22 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           title: 'DIBLOG',
           debugShowCheckedModeBanner: false,
-          theme: themeState.themeData, // Use the theme from ThemeCubit
-
-          // Fixing the onGenerateRoute block
+          theme: themeState.themeData,
           onGenerateRoute: (settings) {
             if (settings.name == '/reset_password_page') {
               return MaterialPageRoute(
                 builder: (context) => const ResetPasswordPage(),
               );
             }
-            return null; // Return null if the route isn't recognized
+            return null;
           },
-
           home: BlocSelector<AppUserCubit, AppUserState, bool>(
             selector: (state) {
               return state is AppUserLoggedIn;
             },
             builder: (context, isLoggedIn) {
               if (isLoggedIn) {
-                return const BlogPage();
+                return const BlogLayoutPage();
               }
               return const LoginPage();
             },

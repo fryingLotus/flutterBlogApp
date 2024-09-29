@@ -47,6 +47,7 @@ void _initAuth() {
     ..registerFactory(() => SendPasswordReset(serviceLocator()))
     ..registerFactory(() => ResetPassword(serviceLocator()))
     ..registerFactory(() => UpdateProfilePicture(serviceLocator()))
+    ..registerFactory(() => SearchUsers(serviceLocator()))
     // Bloc
     ..registerLazySingleton(() => AuthBloc(
         userSignUp: serviceLocator(),
@@ -59,6 +60,7 @@ void _initAuth() {
         checkEmailVerified: serviceLocator(),
         updateProfilePicture: serviceLocator(),
         resetPassword: serviceLocator(),
+        searchUsers: serviceLocator(),
         sendPasswordReset: serviceLocator()));
 }
 

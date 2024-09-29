@@ -6,7 +6,7 @@ import 'package:blogapp/features/auth/presentation/pages/email_forget_password_p
 import 'package:blogapp/features/auth/presentation/pages/signup_page.dart';
 import 'package:blogapp/features/auth/presentation/widgets/auth_field.dart';
 import 'package:blogapp/features/auth/presentation/widgets/auth_gradient_button.dart';
-import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
+import 'package:blogapp/features/blog/presentation/layout/blog_layout_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -67,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
                   showSnackBar(context, state.message, isError: true);
                 } else if (state is AuthSuccess) {
                   Navigator.pushAndRemoveUntil(
-                      context, BlogPage.route(), (route) => false);
+                      context, BlogLayoutPage.route(), (route) => false);
                 } else if (state is AuthSuccessMessage) {
                   showSnackBar(context, state.message);
                 }

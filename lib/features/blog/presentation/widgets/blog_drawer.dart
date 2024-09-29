@@ -5,15 +5,18 @@ import 'package:blogapp/core/common/pages/follower_page.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
+import 'package:blogapp/features/blog/presentation/layout/blog_layout_page.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_owned_page.dart';
-import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
 import 'package:blogapp/features/blog/presentation/pages/settings_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/drawer_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MyDrawer extends StatelessWidget {
-  const MyDrawer({super.key});
+  //final Function(int) onItemSelected;
+  const MyDrawer({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +41,7 @@ class MyDrawer extends StatelessWidget {
             leading: const Icon(Icons.home),
             onTap: () {
               Navigator.pop(context);
-              Navigator.push(context, BlogPage.route());
+              Navigator.push(context, BlogLayoutPage.route());
             },
           ),
           DrawerTile(

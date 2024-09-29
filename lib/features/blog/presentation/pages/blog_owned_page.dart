@@ -145,9 +145,9 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
             return const SizedBox.shrink();
           },
         ),
-        drawer: isOwnProfile
-            ? const MyDrawer()
-            : null, // Only show drawer if it's the user's own profile
+        //drawer: isOwnProfile
+        //    ? const MyDrawer()
+        //    : null, // Only show drawer if it's the user's own profile
       ),
     );
   }
