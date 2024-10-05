@@ -52,6 +52,8 @@ class AuthSendPasswordReset extends AuthEvent {
 
 class AuthCheckEmailVerified extends AuthEvent {}
 
+final class AuthGoogleSignIn extends AuthEvent {}
+
 class AuthUpdateProfilePicture extends AuthEvent {
   final File avatarImage;
 

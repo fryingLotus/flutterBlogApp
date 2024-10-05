@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_drawer.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_editor.dart';
-import 'package:blogapp/core/themes/app_pallete.dart';
 
 class BlogSearchPage extends StatefulWidget {
   const BlogSearchPage({super.key});
@@ -18,6 +17,11 @@ class BlogSearchPage extends StatefulWidget {
 
 class _BlogSearchPageState extends State<BlogSearchPage> {
   final TextEditingController usernameController = TextEditingController();
+  @override
+  void dispose() {
+    usernameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

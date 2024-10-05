@@ -22,6 +22,7 @@ import 'package:blogapp/features/auth/domain/usecases/search_users.dart';
 import 'package:blogapp/features/auth/domain/usecases/send_password_reset.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_profile_picture.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
+import 'package:blogapp/features/auth/domain/usecases/user_google_signin.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_login.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_logout.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_sign_up.dart';

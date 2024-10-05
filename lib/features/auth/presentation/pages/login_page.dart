@@ -33,29 +33,10 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  //void _requestResendVerificationEmail() {
-  //  final email = _emailController.text.trim();
-  //  if (email.isNotEmpty) {
-  //    context.read<AuthBloc>().add(AuthResendVerificationEmail(email: email));
-  //  } else {
-  //    showSnackBar(context, 'Please enter your email address.', isError: true);
-  //  }
-  //}
-
-  //void _requestPasswordReset() {
-  //  final email = _emailController.text.trim();
-  //  if (email.isNotEmpty) {
-  //    context.read<AuthBloc>().add(AuthSendPasswordReset(email: email));
-  //  } else {
-  //    showSnackBar(context, 'Please enter your email address.', isError: true);
-  //  }
-  //}
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        // Ensures scroll when the keyboard appears
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15.0),
@@ -79,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 80), // Space to allow scrolling down
+                    const SizedBox(height: 80),
                     const Text(
                       "Sign In",
                       style:
@@ -133,6 +114,41 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    // Google Sign In Button
+                    Container(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.read<AuthBloc>().add(AuthGoogleSignIn());
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Colors.white, // Set the button color to white
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: const BorderSide(
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'lib/images/google.png',
+                              height: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Sign In with Google',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     GestureDetector(
                       onTap: () => Navigator.push(
                           context, EmailForgetPasswordPage.route()),
@@ -166,3 +182,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+

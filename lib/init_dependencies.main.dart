@@ -48,6 +48,7 @@ void _initAuth() {
     ..registerFactory(() => ResetPassword(serviceLocator()))
     ..registerFactory(() => UpdateProfilePicture(serviceLocator()))
     ..registerFactory(() => SearchUsers(serviceLocator()))
+    ..registerFactory(() => UserGoogleSignin(serviceLocator()))
     // Bloc
     ..registerLazySingleton(() => AuthBloc(
         userSignUp: serviceLocator(),
@@ -61,6 +62,7 @@ void _initAuth() {
         updateProfilePicture: serviceLocator(),
         resetPassword: serviceLocator(),
         searchUsers: serviceLocator(),
+        userGoogleSignin: serviceLocator(),
         sendPasswordReset: serviceLocator()));
 }
 

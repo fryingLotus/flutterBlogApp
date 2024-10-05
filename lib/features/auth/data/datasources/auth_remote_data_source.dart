@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:blogapp/core/error/exceptions.dart';
+import 'package:blogapp/core/secrets/app_secrets.dart';
 import 'package:blogapp/features/auth/data/models/user_model.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract interface class AuthRemoteDataSource {
@@ -49,6 +51,7 @@ abstract interface class AuthRemoteDataSource {
       required String code,
       required String newPassword});
   Future<List<UserModel>> searchUsers({required String username});
+  Future<UserModel> signInWithGoogle();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -324,5 +327,45 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } catch (e) {
       throw ServerException(e.toString());
     }
+  }
+
+  @override
+  Future<UserModel> signInWithGoogle() async {
+    const webClientId = AppSecrets.webClientId;
+    const iosClientId = AppSecrets.iosClientId;
+
+    final GoogleSignIn googleSignIn = GoogleSignIn(
+      clientId: iosClientId,
+      serverClientId: webClientId,
+    );
+
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      throw const ServerException('Google sign-in aborted.');
+    }
+
+    final googleAuth = await googleUser.authentication;
+    final accessToken = googleAuth.accessToken;
+    final idToken = googleAuth.idToken;
+
+    if (accessToken == null) {
+      throw const ServerException('No Access Token found.');
+    }
+    if (idToken == null) {
+      throw const ServerException('No ID Token found.');
+    }
+
+    final response = await supabaseClient.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: accessToken,
+    );
+
+    final user = response.user;
+    if (user == null) {
+      throw const ServerException('User is null after Google sign-in!');
+    }
+
+    return UserModel.fromJson(user.toJson());
   }
 }

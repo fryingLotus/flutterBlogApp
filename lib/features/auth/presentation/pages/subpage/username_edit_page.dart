@@ -21,12 +21,7 @@ class _UsernameEditPageState extends State<UsernameEditPage> {
   @override
   void initState() {
     super.initState();
-    final state = context.read<AppUserCubit>().state;
-    if (state is AppUserLoggedIn) {
-      _usernameController = TextEditingController(text: state.user.name);
-    } else {
-      _usernameController = TextEditingController();
-    }
+    _usernameController = TextEditingController();
   }
 
   @override
@@ -61,6 +56,14 @@ class _UsernameEditPageState extends State<UsernameEditPage> {
             if (state is AuthLoading) {
               return const Center(child: CircularProgressIndicator());
             }
+            // Get the current user from AppUserCubit state
+            final appUserState = context.watch<AppUserCubit>().state;
+
+            if (appUserState is AppUserLoggedIn) {
+              _usernameController.text =
+                  appUserState.user.name; // Set the username
+            }
+
             return Column(
               children: [
                 AuthField(
@@ -80,3 +83,4 @@ class _UsernameEditPageState extends State<UsernameEditPage> {
     );
   }
 }
+

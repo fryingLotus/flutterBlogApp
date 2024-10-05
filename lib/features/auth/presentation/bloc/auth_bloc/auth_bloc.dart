@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:blogapp/core/secrets/app_secrets.dart';
 import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/features/auth/domain/usecases/check_email_verified.dart';
@@ -11,11 +12,13 @@ import 'package:blogapp/features/auth/domain/usecases/search_users.dart';
 import 'package:blogapp/features/auth/domain/usecases/send_password_reset.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_profile_picture.dart';
 import 'package:blogapp/features/auth/domain/usecases/update_user.dart';
+import 'package:blogapp/features/auth/domain/usecases/user_google_signin.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_login.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_logout.dart';
 import 'package:blogapp/features/auth/domain/usecases/user_sign_up.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -33,6 +36,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SendPasswordReset _sendPasswordReset;
   final ResetPassword _resetPassword;
   final SearchUsers _searchUsers;
+  final UserGoogleSignin _userGoogleSignin;
 
   AuthBloc({
     required UserSignUp userSignUp,
@@ -47,6 +51,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required SendPasswordReset sendPasswordReset,
     required ResetPassword resetPassword,
     required SearchUsers searchUsers,
+    required UserGoogleSignin userGoogleSignin,
   })  : _userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
@@ -59,6 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _sendPasswordReset = sendPasswordReset,
         _resetPassword = resetPassword,
         _searchUsers = searchUsers,
+        _userGoogleSignin = userGoogleSignin,
         super(AuthInitial()) {
     on<AuthSignUp>(_onAuthSignUp);
     on<AuthLogin>(_onAuthLogin);
@@ -71,6 +77,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSendPasswordReset>(_onAuthSendPasswordReset);
     on<AuthResetPassword>(_onAuthResetPassword);
     on<AuthSearchUser>(_onAuthSearchUser);
+    on<AuthGoogleSignIn>(_onAuthGoogleSignIn);
   }
   void _onAuthSignUp(AuthSignUp event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
@@ -263,6 +270,33 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (r) {
         emit(AuthSearchSuccess(r));
+      },
+    );
+  }
+
+  Future<void> signOutGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn(
+      clientId: AppSecrets.iosClientId,
+      serverClientId: AppSecrets.webClientId,
+    );
+
+    await googleSignIn.signOut();
+  }
+
+  void _onAuthGoogleSignIn(
+      AuthGoogleSignIn event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    await signOutGoogle();
+    final response = await _userGoogleSignin(NoParams());
+    print("google sign in clicked!");
+
+    response.fold(
+      (failure) {
+        print("testr failure");
+        emit(AuthFailure(failure.message));
+      },
+      (user) {
+        _emitAuthSuccess(user, emit);
       },
     );
   }

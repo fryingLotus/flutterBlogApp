@@ -32,4 +32,5 @@ abstract interface class AuthRepository {
       required String code,
       required String newPassword});
   Future<Either<Failures, List<User>>> searchUsers({required String username});
+  Future<Either<Failures, User>> signInWithGoogle();
 }
