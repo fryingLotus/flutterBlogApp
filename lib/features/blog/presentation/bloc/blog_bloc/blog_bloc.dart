@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blog_topics.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_blogs_from_followed_user.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
@@ -24,6 +26,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final LikeBlog _likeBlog;
   final UnlikeBlog _unlikeBlog;
   final GetBlogsFromFollowedUser _getBlogsFromFollowedUser;
+  final GetAllBlogTopics _getAllBlogTopics;
   List<Blog>? _blogs;
   BlogBloc(
       {required UploadBlog uploadBlog,
@@ -33,6 +36,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
       required UpdateBlog updateBlog,
       required LikeBlog likeBlog,
       required UnlikeBlog unlikeBlog,
+      required GetAllBlogTopics getAllBlogTopics,
       required GetBlogsFromFollowedUser getBlogsFromFollowedUser})
       : _uploadBlog = uploadBlog,
         _getAllBlogs = getAllBlogs,
@@ -42,6 +46,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
         _updateBlog = updateBlog,
         _unlikeBlog = unlikeBlog,
         _getBlogsFromFollowedUser = getBlogsFromFollowedUser,
+        _getAllBlogTopics = getAllBlogTopics,
         super(BlogInitial()) {
     //on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
@@ -52,6 +57,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     on<BlogUpdate>(_onUpdateBlog);
     on<BlogLike>(_onLikeBlog);
     on<BlogUnlike>(_onUnlikeBlog);
+    on<BlogFetchAllBlogTopics>(_onFetchBlogTopics);
   }
   void _onBlogUpload(
     BlogUpload event,
@@ -242,6 +248,20 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
         print(
             'Update successful: ${r.id}'); // Log success message (or any other relevant info)
         emit(BlogUpdateSuccess());
+      },
+    );
+  }
+
+  void _onFetchBlogTopics(
+      BlogFetchAllBlogTopics event, Emitter<BlogState> emit) async {
+    emit(BlogLoading());
+    final res = await _getAllBlogTopics(NoParams());
+    res.fold(
+      (l) {
+        emit(BlogFailure(l.message));
+      },
+      (r) {
+        emit(BlogTopicsDisplaySuccess(r));
       },
     );
   }

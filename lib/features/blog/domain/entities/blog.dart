@@ -50,4 +50,9 @@ class Blog {
       isLiked: isLiked ?? this.isLiked,
     );
   }
+
+  @override
+  String toString() {
+    return 'Blog{id: $id, posterId: $posterId, title: $title, content: $content, imageUrl: $imageUrl, topics: ${topics.join(', ')}, updatedAt: $updatedAt, posterName: $posterName, likes_count: $likes_count, isLiked: $isLiked}';
+  }
 }

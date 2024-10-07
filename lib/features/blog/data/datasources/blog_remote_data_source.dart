@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:blogapp/core/error/exceptions.dart';
 import 'package:blogapp/features/blog/data/models/blog_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,7 +10,6 @@ abstract interface class BlogRemoteDataSource {
     required BlogModel blog,
   });
   Future<List<BlogModel>> getAllBlogs({int page = 1, int pageSize = 10});
-
   Future<List<BlogModel>> getBlogsFromFollowedUsers(
       {int page = 1, int pageSize = 10});
   Future<List<BlogModel>> getUserBlogs(String userId);
@@ -19,12 +17,16 @@ abstract interface class BlogRemoteDataSource {
   Future<BlogModel> updateBlog(BlogModel blog);
   Future<void> likeBlog(String blogId);
   Future<void> unlikeBlog(String blogId);
+  Future<void> insertBlogTopic(
+      {required String blogId, required String topicId});
+  Future<List<String>> getAllBlogTopics();
 }
 
 class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   final SupabaseClient supabaseClient;
 
   BlogRemoteDataSourceImpl(this.supabaseClient);
+
   @override
   Future<BlogModel> uploadBlog(BlogModel blog) async {
     try {
@@ -62,14 +64,21 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
 
       final blogs = await supabaseClient
           .from('blogs')
-          .select('*,profiles (name)')
+          .select('*, profiles (name), blog_topics (topic_id, topics (name))')
           .range(start, end);
 
-      return blogs
-          .map((blog) => BlogModel.fromJson(blog).copyWith(
-                posterName: blog['profiles']['name'],
-              ))
-          .toList();
+      return blogs.map((blog) {
+        // Extract topic names
+        final topics = (blog['blog_topics'] as List<dynamic>?)
+                ?.map((topic) => topic['topics']['name'] as String)
+                .toList() ??
+            [];
+
+        return BlogModel.fromJson(blog).copyWith(
+          posterName: blog['profiles']['name'],
+          topics: topics, // Set the topic names here
+        );
+      }).toList();
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {
@@ -82,7 +91,7 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
     try {
       final blogs = await supabaseClient
           .from('blogs')
-          .select('*,profiles (name)')
+          .select('*, profiles (name)')
           .eq('poster_id', userId);
       return blogs
           .map((blog) => BlogModel.fromJson(blog)
@@ -98,7 +107,7 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   @override
   Future<void> deleteBlog(String blogId) async {
     try {
-      return await supabaseClient.from('blogs').delete().eq('id', blogId);
+      await supabaseClient.from('blogs').delete().eq('id', blogId);
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {
@@ -132,7 +141,6 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   Future<void> likeBlog(String blogId) async {
     try {
       final userId = supabaseClient.auth.currentUser?.id;
-      print("blogId ${blogId}");
       await supabaseClient.rpc('like_blog_or_comment', params: {
         'p_poster_id': userId,
         'p_blog_id': blogId,
@@ -149,7 +157,6 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   Future<void> unlikeBlog(String blogId) async {
     try {
       final userId = supabaseClient.auth.currentUser?.id;
-
       await supabaseClient.rpc('unlike_blog_or_comment', params: {
         'p_poster_id': userId,
         'p_blog_id': blogId,
@@ -188,6 +195,38 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
       } else {
         throw Exception('Unexpected response type: ${response.runtimeType}');
       }
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<void> insertBlogTopic({
+    required String blogId,
+    required String topicId,
+  }) async {
+    try {
+      await supabaseClient.from('blog_topics').insert({
+        'blog_id': blogId,
+        'topic_id': topicId,
+      });
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<String>> getAllBlogTopics() async {
+    try {
+      final response = await supabaseClient.from('topics').select('name');
+
+      return (response as List<dynamic>)
+          .map((topic) => topic['name'] as String)
+          .toList();
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

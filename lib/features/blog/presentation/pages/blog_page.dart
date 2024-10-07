@@ -64,6 +64,11 @@ class _BlogPageState extends State<BlogPage>
 
         final newItems = (state as BlogsDisplaySuccess).blogs;
 
+        // Print each blog's details
+        for (var blog in newItems) {
+          print(blog); // This will call the toString() method
+        }
+
         // Filter out duplicate blogs
         final filteredItems = newItems
             .where((blog) => !_loadedAllBlogIds.contains(blog.id))
@@ -270,4 +275,3 @@ class _BlogPageState extends State<BlogPage>
     );
   }
 }
-

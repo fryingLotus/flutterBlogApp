@@ -42,7 +42,10 @@ class BlogRepositoriesImpl implements BlogRepository {
       blogModel = blogModel.copyWith(imageUrl: imageUrl);
 
       final uploadedBlog = await blogRemoteDataSource.uploadBlog(blogModel);
-
+      for (var topic in topics) {
+        await blogRemoteDataSource.insertBlogTopic(
+            blogId: uploadedBlog.id, topicId: topic);
+      }
       return right(uploadedBlog);
     } on ServerException catch (e) {
       return left(Failures(e.message));
@@ -176,6 +179,16 @@ class BlogRepositoriesImpl implements BlogRepository {
           page: page, pageSize: pageSize);
       blogLocalDataSource.uploadLocalBlog(blogs: blogs);
       return right(blogs);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failures, List<String>>> getAllBlogTopics() async {
+    try {
+      final topics = await blogRemoteDataSource.getAllBlogTopics();
+      return right(topics);
     } on ServerException catch (e) {
       return left(Failures(e.message));
     }

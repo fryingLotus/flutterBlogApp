@@ -28,6 +28,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController contentController = TextEditingController();
   List<String> selectedTopics = [];
+  List<String> allBlogTopics = []; // New list to store fetched topics
   File? image;
   final formkey = GlobalKey<FormState>();
 
@@ -40,6 +41,9 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
       selectedTopics = widget.blog!.topics;
       image = null;
     }
+
+    // Fetch all blog topics when initializing the page
+    context.read<BlogBloc>().add(BlogFetchAllBlogTopics());
   }
 
   void selectImage() async {
@@ -121,7 +125,11 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
             Navigator.pushAndRemoveUntil(
                 context, BlogPage.route(), (route) => false);
             showSnackBar(context,
-                'Your blog "${titleController.text}" has been added succesfully');
+                'Your blog "${titleController.text}" has been added successfully');
+          } else if (state is BlogTopicsDisplaySuccess) {
+            // Update the list of all blog topics when the state changes
+            allBlogTopics = state
+                .topics; // Make sure your BlogTopicsDisplaySuccess state has a topics list
           }
         },
         builder: (context, state) {
@@ -189,12 +197,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: [
-                          'Technology',
-                          'Business',
-                          'Programming',
-                          'Entertainment',
-                        ]
+                        children: allBlogTopics // Use the fetched topics here
                             .map(
                               (e) => Padding(
                                 padding:

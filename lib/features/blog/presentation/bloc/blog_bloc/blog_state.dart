@@ -51,3 +51,9 @@ final class UserBlogsDisplaySuccess extends BlogState {
 
   UserBlogsDisplaySuccess(this.userBlogs);
 }
+
+final class BlogTopicsDisplaySuccess extends BlogState {
+  final List<String> topics;
+
+  BlogTopicsDisplaySuccess(this.topics);
+}
