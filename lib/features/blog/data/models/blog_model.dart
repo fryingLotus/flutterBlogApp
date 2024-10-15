@@ -65,7 +65,6 @@ class BlogModel extends Blog {
       'title': title,
       'content': content,
       'image_url': imageUrl,
-      'topics': topics,
       'updated_at': updatedAt.toIso8601String(),
       'likes_count': likes_count,
     };

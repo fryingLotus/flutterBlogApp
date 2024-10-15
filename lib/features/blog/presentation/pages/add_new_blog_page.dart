@@ -5,6 +5,7 @@ import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/pick_image.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
+import 'package:blogapp/features/blog/domain/entities/topic.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_editor.dart';
@@ -15,7 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class AddNewBlogPage extends StatefulWidget {
   final Blog? blog;
 
-  static route({Blog? blog}) =>
+  static Route route({Blog? blog}) =>
       MaterialPageRoute(builder: (context) => AddNewBlogPage(blog: blog));
 
   const AddNewBlogPage({super.key, this.blog});
@@ -27,19 +28,20 @@ class AddNewBlogPage extends StatefulWidget {
 class _AddNewBlogPageState extends State<AddNewBlogPage> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController contentController = TextEditingController();
-  List<String> selectedTopics = [];
-  List<String> allBlogTopics = []; // New list to store fetched topics
+  List<Topic> selectedTopics = [];
+  List<Topic> allBlogTopics = [];
   File? image;
-  final formkey = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
+
+    // Set existing blog data if editing
     if (widget.blog != null) {
       titleController.text = widget.blog!.title;
       contentController.text = widget.blog!.content;
-      selectedTopics = widget.blog!.topics;
-      image = null;
+      image = null; // Initialize image as null for editing
     }
 
     // Fetch all blog topics when initializing the page
@@ -56,7 +58,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
   }
 
   void uploadOrEditBlog() {
-    if (formkey.currentState!.validate() &&
+    if (formKey.currentState!.validate() &&
         selectedTopics.isNotEmpty &&
         (image != null || widget.blog != null)) {
       final posterId =
@@ -70,23 +72,23 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
               title: titleController.text.trim(),
               content: contentController.text.trim(),
               image: image,
-              currentImageUrl: widget.blog!.imageUrl, // Pass the existing URL
+              currentImageUrl: widget.blog!.imageUrl,
               topics: selectedTopics,
             ));
-        print('Updating blog: ${widget.blog!.id}'); // Debug log
+        // Debug log
       } else {
         // Uploading a new blog
         context.read<BlogBloc>().add(BlogUpload(
               posterId: posterId,
               title: titleController.text.trim(),
               content: contentController.text.trim(),
-              image: image!, // Use the local image file
+              image: image!,
               topics: selectedTopics,
             ));
-        print('Uploading new blog'); // Debug log
+        // Debug log
       }
     } else {
-      print('Validation failed or no image provided'); // Debug log
+      // Debug log
     }
   }
 
@@ -97,6 +99,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
     super.dispose();
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,9 +130,16 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
             showSnackBar(context,
                 'Your blog "${titleController.text}" has been added successfully');
           } else if (state is BlogTopicsDisplaySuccess) {
-            // Update the list of all blog topics when the state changes
-            allBlogTopics = state
-                .topics; // Make sure your BlogTopicsDisplaySuccess state has a topics list
+            allBlogTopics = state.topics
+                .map((topic) => Topic(id: topic.id, name: topic.name))
+                .toList();
+
+            if (widget.blog != null) {
+              selectedTopics = allBlogTopics
+                  .where((topic) => widget.blog!.topics.contains(topic
+                      .name)) // Assuming widget.blog!.topics contains topic names
+                  .toList();
+            }
           }
         },
         builder: (context, state) {
@@ -140,7 +150,7 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
-                key: formkey,
+                key: formKey,
                 child: Column(
                   children: [
                     image != null || widget.blog != null
@@ -173,10 +183,10 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
                               radius: const Radius.circular(10),
                               borderType: BorderType.RRect,
                               strokeCap: StrokeCap.round,
-                              child: Container(
+                              child: const SizedBox(
                                 height: 150,
                                 width: double.infinity,
-                                child: const Column(
+                                child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
@@ -199,25 +209,27 @@ class _AddNewBlogPageState extends State<AddNewBlogPage> {
                       child: Row(
                         children: allBlogTopics // Use the fetched topics here
                             .map(
-                              (e) => Padding(
+                              (topic) => Padding(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 5.0),
                                 child: GestureDetector(
                                   onTap: () {
-                                    if (selectedTopics.contains(e)) {
-                                      selectedTopics.remove(e);
+                                    if (selectedTopics.contains(topic)) {
+                                      selectedTopics.remove(topic);
                                     } else {
-                                      selectedTopics.add(e);
+                                      selectedTopics.add(topic);
                                     }
                                     setState(() {});
                                   },
                                   child: Chip(
-                                    label: Text(e),
-                                    color: selectedTopics.contains(e)
-                                        ? const WidgetStatePropertyAll(
-                                            AppPallete.gradient1)
+                                    label:
+                                        Text(topic.name), // Display topic name
+                                    backgroundColor: selectedTopics
+                                            .contains(topic)
+                                        ? AppPallete
+                                            .gradient1 // Highlight if selected
                                         : null,
-                                    side: selectedTopics.contains(e)
+                                    side: selectedTopics.contains(topic)
                                         ? null
                                         : const BorderSide(
                                             color: AppPallete.borderColor),

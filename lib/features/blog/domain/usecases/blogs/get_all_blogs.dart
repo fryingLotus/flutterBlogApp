@@ -12,13 +12,22 @@ class GetAllBlogs implements UseCase<List<Blog>, GetAllBlogsParams> {
   @override
   Future<Either<Failures, List<Blog>>> call(GetAllBlogsParams params) async {
     return await blogRepository.getAllBlogs(
-        page: params.page, pageSize: params.pageSize);
+      topicIds: params.topicIds,
+      page: params.page,
+      pageSize: params.pageSize,
+    );
   }
 }
 
 class GetAllBlogsParams {
+  final List<String>? topicIds;
   final int page;
   final int pageSize;
 
-  GetAllBlogsParams({required this.page, required this.pageSize});
+  GetAllBlogsParams({
+    this.topicIds,
+    required this.page,
+    required this.pageSize,
+  });
 }
+

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
+import 'package:blogapp/features/blog/domain/entities/topic.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blog_topics.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
@@ -85,33 +86,30 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   }
 
   void _onFetchAllBlog(BlogFetchAllBlogs event, Emitter<BlogState> emit) async {
-    if (state is BlogsDisplaySuccess) {
-      final currentBlogs = (state as BlogsDisplaySuccess).blogs;
-      emit(BlogPaginationLoading());
+    try {
+      print('Fetching blogs for page: ${event.page}');
+      final res = await _getAllBlogs(GetAllBlogsParams(
+        topicIds: event.topicIds ?? [],
+        page: event.page,
+        pageSize: event.pageSize,
+      ));
 
-      final res = await _getAllBlogs(
-          GetAllBlogsParams(page: event.page, pageSize: event.pageSize));
       res.fold(
-        (l) => emit(BlogFailure(l.message)),
+        (l) {
+          print('Error fetching blogs: ${l.message}'); // Log error
+          emit(BlogFailure(l.message)); // Emit failure state
+        },
         (r) {
+          print('Fetched blogs: $r'); // Log the blogs
           final isLastPage = r.length < event.pageSize;
-          final updatedBlogs = List<Blog>.from(currentBlogs)..addAll(r);
-          _blogs = updatedBlogs;
-          emit(BlogsDisplaySuccess(updatedBlogs, isLastPage: isLastPage));
+          emit(BlogsDisplaySuccess(r,
+              isLastPage: isLastPage)); // Emit success state
         },
       );
-    } else {
-      emit(BlogLoading());
-      final res = await _getAllBlogs(
-          GetAllBlogsParams(page: event.page, pageSize: event.pageSize));
-      res.fold(
-        (l) => emit(BlogFailure(l.message)),
-        (r) {
-          final isLastPage = r.length < event.pageSize;
-          _blogs = r;
-          emit(BlogsDisplaySuccess(r, isLastPage: isLastPage));
-        },
-      );
+    } catch (e) {
+      print('Exception while fetching blogs: $e'); // Log exceptions
+      emit(BlogFailure(
+          e.toString())); // Emit failure state if an exception occurs
     }
   }
 

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:blogapp/core/error/failures.dart';
 import 'package:blogapp/core/usecases/usecase.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
+import 'package:blogapp/features/blog/domain/entities/topic.dart';
 import 'package:blogapp/features/blog/domain/repositories/blog_repository.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -31,7 +32,7 @@ class UpdateBlogParams {
   final String posterId;
   final String content;
   final File? image;
-  final List<String> topics;
+  final List<Topic> topics;
   final String? currentImageUrl;
 
   UpdateBlogParams({
@@ -44,4 +45,3 @@ class UpdateBlogParams {
     this.currentImageUrl,
   });
 }
-

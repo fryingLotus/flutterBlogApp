@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:blogapp/core/error/failures.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
+import 'package:blogapp/features/blog/domain/entities/topic.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class BlogRepository {
@@ -10,9 +11,10 @@ abstract interface class BlogRepository {
     required String title,
     required String content,
     required String posterId,
-    required List<String> topics,
+    required List<Topic> topics,
   });
-  Future<Either<Failures, List<Blog>>> getAllBlogs({int page, int pageSize});
+  Future<Either<Failures, List<Blog>>> getAllBlogs(
+      {List<String>? topicIds, int page, int pageSize});
 
   Future<Either<Failures, List<Blog>>> getBlogsFromFollowedUsers(
       {int page, int pageSize});
@@ -25,10 +27,10 @@ abstract interface class BlogRepository {
     required String title,
     required String content,
     required String posterId,
-    required List<String> topics,
+    required List<Topic> topics,
     String? currentImageUrl,
   });
   Future<Either<Failures, bool>> likeBlog(String blogId);
   Future<Either<Failures, bool>> unlikeBlog(String blogId);
-  Future<Either<Failures, List<String>>> getAllBlogTopics();
+  Future<Either<Failures, List<Topic>>> getAllBlogTopics();
 }

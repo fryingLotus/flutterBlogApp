@@ -7,7 +7,7 @@ final class BlogUpload extends BlogEvent {
   final String title;
   final String content;
   final File image;
-  final List<String> topics;
+  final List<Topic> topics;
 
   BlogUpload({
     required this.posterId,
@@ -23,7 +23,7 @@ final class BlogUpdate extends BlogEvent {
   final String title;
   final String content;
   final File? image; // Make image optional
-  final List<String> topics;
+  final List<Topic> topics;
   final String blogId;
   final String? currentImageUrl; // Optional current image URL
 
@@ -41,8 +41,13 @@ final class BlogUpdate extends BlogEvent {
 final class BlogFetchAllBlogs extends BlogEvent {
   final int page;
   final int pageSize;
+  final List<String>? topicIds;
 
-  BlogFetchAllBlogs({required this.page, required this.pageSize});
+  BlogFetchAllBlogs({
+    this.topicIds,
+    required this.page,
+    required this.pageSize,
+  });
 }
 
 final class BlogFetchUserFollowBlogs extends BlogEvent {

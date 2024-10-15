@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/core/secrets/app_secrets.dart';
 import 'package:blogapp/core/usecases/usecase.dart';
-import 'package:blogapp/core/entities/user.dart';
 import 'package:blogapp/features/auth/domain/usecases/check_email_verified.dart';
 import 'package:blogapp/features/auth/domain/usecases/current_user.dart';
 import 'package:blogapp/features/auth/domain/usecases/resend_verification_email.dart';
@@ -204,7 +204,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     response.fold(
       (failure) {
-        print("resend" + failure.message.toString());
+        print("resend${failure.message}");
         emit(AuthFailure(failure.message));
       },
       (_) {
@@ -288,11 +288,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     await signOutGoogle();
     final response = await _userGoogleSignin(NoParams());
-    print("google sign in clicked!");
 
     response.fold(
       (failure) {
-        print("testr failure");
         emit(AuthFailure(failure.message));
       },
       (user) {

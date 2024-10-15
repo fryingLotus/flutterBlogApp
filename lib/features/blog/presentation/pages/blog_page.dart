@@ -1,17 +1,20 @@
 import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
-import 'package:blogapp/core/common/widgets/loader.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/domain/entities/blog.dart';
+import 'package:blogapp/features/blog/domain/entities/topic.dart';
 import 'package:blogapp/features/blog/presentation/bloc/blog_bloc/blog_bloc.dart';
 import 'package:blogapp/features/blog/presentation/pages/add_new_blog_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_card.dart';
 import 'package:blogapp/features/blog/presentation/widgets/blog_drawer.dart';
+import 'package:blogapp/features/blog/presentation/widgets/custom_multi_select_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:multi_select_flutter/dialog/mult_select_dialog.dart';
+import 'package:multi_select_flutter/util/multi_select_item.dart';
 
 class BlogPage extends StatefulWidget {
   static route() => MaterialPageRoute(builder: (context) => const BlogPage());
@@ -32,12 +35,23 @@ class _BlogPageState extends State<BlogPage>
       PagingController(firstPageKey: 1);
   final Set<String> _loadedAllBlogIds = {};
   final Set<String> _loadedFollowedBlogIds = {};
+  final List<Topic> _selectedTopics = [];
+  List<Topic> _allBlogTopics = [];
 
   @override
   void initState() {
     super.initState();
     _openLikesBox();
     _tabController = TabController(length: 2, vsync: this);
+
+    context.read<BlogBloc>().add(BlogFetchAllBlogTopics());
+    context.read<BlogBloc>().stream.listen((state) {
+      if (state is BlogTopicsDisplaySuccess) {
+        setState(() {
+          _allBlogTopics = state.topics;
+        });
+      }
+    });
 
     _allBlogsPagingController.addPageRequestListener((pageKey) {
       _fetchAllBlogsPage(pageKey);
@@ -55,18 +69,25 @@ class _BlogPageState extends State<BlogPage>
   Future<void> _fetchAllBlogsPage(int pageKey) async {
     try {
       final bloc = context.read<BlogBloc>();
-      bloc.add(BlogFetchAllBlogs(page: pageKey, pageSize: _pageSize));
+      List<String>? topicIds = _selectedTopics.isNotEmpty
+          ? _selectedTopics.map((topic) => topic.id).toList()
+          : null;
+
+      bloc.add(BlogFetchAllBlogs(
+        topicIds: topicIds,
+        page: pageKey,
+        pageSize: _pageSize,
+      ));
 
       bloc.stream
           .firstWhere((state) => state is BlogsDisplaySuccess)
           .then((state) {
-        if (!mounted) return; // Ensure the widget is still mounted
+        if (!mounted) return;
 
         final newItems = (state as BlogsDisplaySuccess).blogs;
 
-        // Print each blog's details
         for (var blog in newItems) {
-          print(blog); // This will call the toString() method
+          print(blog);
         }
 
         // Filter out duplicate blogs
@@ -89,6 +110,33 @@ class _BlogPageState extends State<BlogPage>
         _allBlogsPagingController.error = error;
       }
     }
+  }
+
+  void _openFilterBox(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return CustomMultiSelectDialog(
+          allTopics: _allBlogTopics,
+          selectedTopics: _selectedTopics,
+          onConfirm: (selectedTopics) {
+            setState(() {
+              _selectedTopics.clear();
+              _selectedTopics.addAll(selectedTopics);
+            });
+
+            // Print the selected topics
+            print("Selected Topics:");
+            for (var selected in _selectedTopics) {
+              print("Topic ID: ${selected.id}, Topic Name: ${selected.name}");
+            }
+
+            // Refresh the blogs list with the new filter
+            _refreshBlogs();
+          },
+        );
+      },
+    );
   }
 
   Future<void> _fetchFollowedBlogsPage(int pageKey) async {
@@ -168,10 +216,17 @@ class _BlogPageState extends State<BlogPage>
       _likesBox.put(uniqueKey, !isLiked);
 
       // Refresh the UI for the specific blog card
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     } catch (e) {
       showSnackBar(context, "An error has occurred", isError: true);
     }
+  }
+
+  void _refreshBlogs() {
+    _allBlogsPagingController.refresh();
+    _loadedAllBlogIds.clear();
   }
 
   @override
@@ -194,7 +249,13 @@ class _BlogPageState extends State<BlogPage>
               Navigator.push(context, AddNewBlogPage.route());
             },
             icon: const Icon(CupertinoIcons.add_circled),
-          )
+          ),
+          IconButton(
+            onPressed: () {
+              _openFilterBox(context);
+            },
+            icon: const Icon(Icons.filter_list_sharp),
+          ),
         ],
         bottom: TabBar(
           controller: _tabController,
