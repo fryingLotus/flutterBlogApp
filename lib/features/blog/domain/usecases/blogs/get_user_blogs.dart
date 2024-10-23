@@ -11,12 +11,14 @@ class GetUserBlogs implements UseCase<List<Blog>, GetUserBlogsParams> {
 
   @override
   Future<Either<Failures, List<Blog>>> call(GetUserBlogsParams params) async {
-    return await blogRepository.getUserBlogs(params.userId);
+    return await blogRepository.getUserBlogs(
+        userId: params.userId, topicIds: params.topicIds);
   }
 }
 
 class GetUserBlogsParams {
   final String userId;
+  final List<String>? topicIds;
 
-  GetUserBlogsParams({required this.userId});
+  GetUserBlogsParams({this.topicIds, required this.userId});
 }

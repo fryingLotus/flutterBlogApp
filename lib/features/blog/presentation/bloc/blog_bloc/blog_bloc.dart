@@ -87,7 +87,6 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
 
   void _onFetchAllBlog(BlogFetchAllBlogs event, Emitter<BlogState> emit) async {
     try {
-      print('Fetching blogs for page: ${event.page}');
       final res = await _getAllBlogs(GetAllBlogsParams(
         topicIds: event.topicIds ?? [],
         page: event.page,
@@ -96,18 +95,18 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
 
       res.fold(
         (l) {
-          print('Error fetching blogs: ${l.message}'); // Log error
+          // Log error
           emit(BlogFailure(l.message)); // Emit failure state
         },
         (r) {
-          print('Fetched blogs: $r'); // Log the blogs
+          // Log the blogs
           final isLastPage = r.length < event.pageSize;
           emit(BlogsDisplaySuccess(r,
               isLastPage: isLastPage)); // Emit success state
         },
       );
     } catch (e) {
-      print('Exception while fetching blogs: $e'); // Log exceptions
+      // Log exceptions
       emit(BlogFailure(
           e.toString())); // Emit failure state if an exception occurs
     }
@@ -115,40 +114,42 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
 
   void _onBlogFetchUserFollowBlogs(
       BlogFetchUserFollowBlogs event, Emitter<BlogState> emit) async {
-    // Emit pagination loading state
-
-    // Fetch blogs from followed users
-    final res = await _getBlogsFromFollowedUser(
-      GetBlogsFromFollowedUserParams(
-          page: event.page, pageSize: event.pageSize),
-    );
-    print("Response: $res");
-    // Handle the response
-    res.fold(
-      (l) {
-        print("Error: " + l.message);
-
-        emit(BlogFailure(l.message));
-      },
-      (r) {
-        final isLastPage = r.length < event.pageSize;
-        emit(BlogsDisplayUserFollowSuccess(r, isLastPage: isLastPage));
-      },
-    );
+    print(
+        "Fetching blogs from followed users. Page: ${event.page}, PageSize: ${event.pageSize}, TopicIds: ${event.topicIds}");
+    try {
+      final res = await _getBlogsFromFollowedUser(
+        GetBlogsFromFollowedUserParams(
+            topicIds: event.topicIds ?? [],
+            page: event.page,
+            pageSize: event.pageSize),
+      );
+      res.fold(
+        (l) {
+          print("Error fetching blogs from followed users: ${l.message}");
+          emit(BlogFailure(l.message));
+        },
+        (r) {
+          print("Fetched ${r.length} blogs from followed users");
+          final isLastPage = r.length < event.pageSize;
+          emit(BlogsDisplayUserFollowSuccess(r, isLastPage: isLastPage));
+        },
+      );
+    } catch (e) {
+      print("Exception in _onBlogFetchUserFollowBlogs: $e");
+      emit(BlogFailure(e.toString()));
+    }
   }
 
   void _onFetchUserBlog(
       BlogFetchUserBlogs event, Emitter<BlogState> emit) async {
     emit(BlogLoading());
-    final res = await _getUserBlogs(GetUserBlogsParams(userId: event.userId));
+    final res = await _getUserBlogs(GetUserBlogsParams(
+        userId: event.userId, topicIds: event.topicIds ?? []));
     res.fold(
       (l) => emit(BlogFailure(l.message)),
       (r) {
         // Print all user-owned blogs for debugging
-        print('Fetched User Blogs:');
-        for (var blog in r) {
-          print('Blog ID: ${blog.id}, Title: ${blog.title}');
-        }
+        for (var blog in r) {}
         emit(UserBlogsDisplaySuccess(r));
       },
     );
@@ -156,50 +157,33 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
 
   void _onDeleteBlog(BlogDelete event, Emitter<BlogState> emit) async {
     emit(BlogLoading());
-    print('Deleting blog with ID: ${event.blogId}');
 
     final res = await _deleteBlog(DeleteBlogParams(blogId: event.blogId));
     res.fold(
       (l) {
-        print('Delete failed: ${l.message}');
         emit(BlogFailure(l.message));
       },
       (r) {
-        print('Blog deleted successfully.');
         emit(BlogDeleteSuccess());
       },
     );
   }
 
   void _onLikeBlog(BlogLike event, Emitter<BlogState> emit) async {
-    print("Like!");
     final res = await _likeBlog(LikeBlogParams(blogId: event.blogId));
+
     res.fold(
-      (l) {
-        emit(BlogFailure(l.message));
-      },
-      (r) {
-        _updateLikeStatus(event.blogId, true);
-        emit(BlogLikeSuccess(event.blogId));
-        emit(BlogsDisplaySuccess(
-            _blogs!)); // Re-emit the blogs with updated like status
-      },
+      (l) => emit(BlogFailure(l.message)),
+      (r) => emit(BlogLikeSuccess(event.blogId)),
     );
   }
 
   void _onUnlikeBlog(BlogUnlike event, Emitter<BlogState> emit) async {
-    print("unlike!");
     final res = await _unlikeBlog(UnlikeBlogParams(blogId: event.blogId));
+
     res.fold(
-      (l) {
-        emit(BlogFailure(l.message));
-      },
-      (r) {
-        _updateLikeStatus(event.blogId, false);
-        emit(BlogUnlikeSuccess(event.blogId));
-        emit(BlogsDisplaySuccess(
-            _blogs!)); // Re-emit the blogs with updated unlike status
-      },
+      (l) => emit(BlogFailure(l.message)),
+      (r) => emit(BlogUnlikeSuccess(event.blogId)),
     );
   }
 
@@ -208,7 +192,11 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     _blogs = _blogs?.map((blog) {
       if (blog.id == blogId) {
         return blog.copyWith(
-            isLiked: isLiked); // Ensure your Blog entity has a copyWith method
+          isLiked: isLiked,
+          likes_count: isLiked
+              ? (blog.likes_count ?? 0) + 1
+              : (blog.likes_count ?? 0) - 1,
+        );
       }
       return blog;
     }).toList();
@@ -217,11 +205,6 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   void _onUpdateBlog(BlogUpdate event, Emitter<BlogState> emit) async {
     emit(BlogLoading());
     // Log the incoming event details
-    print('Updating blog: ${event.blogId}');
-    print('Poster ID: ${event.posterId}');
-    print('Title: ${event.title}');
-    print('Content: ${event.content}');
-    print('Topics: ${event.topics}');
 
     // Call the update blog method
     final res = await _updateBlog(
@@ -239,12 +222,11 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     // Log the result of the update operation
     res.fold(
       (l) {
-        print('Update failed: ${l.message}'); // Log failure message
+        // Log failure message
         emit(BlogFailure(l.message));
       },
       (r) {
-        print(
-            'Update successful: ${r.id}'); // Log success message (or any other relevant info)
+        // Log success message (or any other relevant info)
         emit(BlogUpdateSuccess());
       },
     );

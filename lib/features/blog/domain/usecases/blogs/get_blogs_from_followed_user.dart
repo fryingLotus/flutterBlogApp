@@ -13,13 +13,17 @@ class GetBlogsFromFollowedUser
   Future<Either<Failures, List<Blog>>> call(
       GetBlogsFromFollowedUserParams params) async {
     return await blogRepository.getBlogsFromFollowedUsers(
-        page: params.page, pageSize: params.pageSize);
+        topicIds: params.topicIds,
+        page: params.page,
+        pageSize: params.pageSize);
   }
 }
 
 class GetBlogsFromFollowedUserParams {
+  List<String>? topicIds;
   final int page;
   final int pageSize;
 
-  GetBlogsFromFollowedUserParams({required this.page, required this.pageSize});
+  GetBlogsFromFollowedUserParams(
+      {this.topicIds, required this.page, required this.pageSize});
 }

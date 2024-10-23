@@ -3,7 +3,6 @@ import 'package:blogapp/core/error/exceptions.dart';
 import 'package:blogapp/features/blog/data/models/blog_model.dart';
 import 'package:blogapp/features/blog/domain/entities/topic.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
 abstract interface class BlogRemoteDataSource {
   Future<BlogModel> uploadBlog(BlogModel blog);
@@ -14,8 +13,9 @@ abstract interface class BlogRemoteDataSource {
   Future<List<BlogModel>> getAllBlogs(
       {List<String>? topicIds, int page = 1, int pageSize = 10});
   Future<List<BlogModel>> getBlogsFromFollowedUsers(
-      {int page = 1, int pageSize = 10});
-  Future<List<BlogModel>> getUserBlogs(String userId);
+      {List<String>? topicIds, int page = 1, int pageSize = 10});
+  Future<List<BlogModel>> getUserBlogs(
+      {List<String>? topicIds, required String userId});
   Future<void> deleteBlog(String blogId);
   Future<BlogModel> updateBlog(BlogModel blog);
   Future<void> likeBlog(String blogId);
@@ -61,48 +61,109 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   }
 
   @override
- Future<List<BlogModel>> getAllBlogs({
-  int page = 1,
-  int pageSize = 10,
-  List<String>? topicIds,
-}) async {
-  try {
-    final List<String> topicIdArray = topicIds ?? [];
-    final response = await supabaseClient.rpc('get_all_blogs', params: {
-      'input_topic_ids': topicIdArray.isEmpty ? null : topicIdArray,
-      'page': page,
-      'page_size': pageSize,
-    });
-
-    if (response is List<dynamic>) {
-      return response.map<BlogModel>((blog) {
-        return BlogModel.fromJson({
-          ...blog,
-          'topics': (blog['topics'] as List<dynamic>?)
-              ?.map((topic) => topic.toString())
-              .toList() ?? [],
-        });
-      }).toList();
-    } else {
-      throw Exception('Unexpected response format');
-    }
-  } on PostgrestException catch (e) {
-    throw ServerException(e.message);
-  } catch (e) {
-    throw ServerException(e.toString());
-  }
-}
-  @override
-  Future<List<BlogModel>> getUserBlogs(String userId) async {
+  Future<List<BlogModel>> getAllBlogs({
+    int page = 1,
+    int pageSize = 10,
+    List<String>? topicIds,
+  }) async {
     try {
-      final blogs = await supabaseClient
-          .from('blogs')
-          .select('*, profiles (name)')
-          .eq('poster_id', userId);
-      return blogs
-          .map((blog) => BlogModel.fromJson(blog)
-              .copyWith(posterName: blog['profiles']['name']))
-          .toList();
+      final List<String> topicIdArray = topicIds ?? [];
+      final response = await supabaseClient.rpc('get_all_blogs', params: {
+        'input_topic_ids': topicIdArray.isEmpty ? null : topicIdArray,
+        'page': page,
+        'page_size': pageSize,
+      });
+
+      if (response is List<dynamic>) {
+        return response.map<BlogModel>((blog) {
+          return BlogModel.fromJson({
+            ...blog,
+            'topics': (blog['topics'] as List<dynamic>?)
+                    ?.map((topic) => topic.toString())
+                    .toList() ??
+                [],
+          });
+        }).toList();
+      } else {
+        throw Exception('Unexpected response format');
+      }
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<BlogModel>> getUserBlogs(
+      {List<String>? topicIds, required String userId}) async {
+    try {
+      final List<String> topicIdArray = topicIds ?? [];
+      final blogs = await supabaseClient.rpc('get_user_blogs', params: {
+        'input_topic_ids': topicIdArray.isEmpty ? null : topicIdArray,
+        'user_id': userId,
+      });
+      //final blogs = await supabaseClient
+      //    .from('blogs')
+      //    .select('*, profiles (name)')
+      //    .eq('poster_id', userId);
+      //return blogs
+      //    .map((blog) => BlogModel.fromJson(blog)
+      //        .copyWith(posterName: blog['profiles']['name']))
+      //    .toList();
+      if (blogs is List<dynamic>) {
+        return blogs.map<BlogModel>((blog) {
+          return BlogModel.fromJson({
+            ...blog,
+            'topics': (blog['topics'] as List<dynamic>?)
+                    ?.map((topic) => topic.toString())
+                    .toList() ??
+                [],
+          });
+        }).toList();
+      } else {
+        throw Exception('Unexpected response format');
+      }
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<BlogModel>> getBlogsFromFollowedUsers({
+    List<String>? topicIds,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    try {
+      final userId = supabaseClient.auth.currentUser?.id;
+
+      final List<String> topicIdArray = topicIds ?? [];
+      // Fetch the blogs
+      final response =
+          await supabaseClient.rpc('get_blogs_from_followed_users', params: {
+        'current_user_id': userId,
+        'input_topic_ids': topicIdArray.isEmpty ? null : topicIdArray,
+        'page': page,
+        'page_size': pageSize,
+      });
+
+      // Check if the response is indeed a List<dynamic>
+      if (response is List<dynamic>) {
+        return response.map<BlogModel>((blog) {
+          return BlogModel.fromJson({
+            ...blog,
+            'topics': (blog['topics'] as List<dynamic>?)
+                    ?.map((topic) => topic.toString())
+                    .toList() ??
+                [],
+          });
+        }).toList();
+      } else {
+        throw Exception('Unexpected response format');
+      }
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {
@@ -176,39 +237,6 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   }
 
   @override
-  Future<List<BlogModel>> getBlogsFromFollowedUsers({
-    int page = 1,
-    int pageSize = 10,
-  }) async {
-    try {
-      final userId = supabaseClient.auth.currentUser?.id;
-
-      // Fetch the blogs
-      final response =
-          await supabaseClient.rpc('get_blogs_from_followed_users', params: {
-        'current_user_id': userId,
-        'page': page,
-        'page_size': pageSize,
-      });
-
-      // Check if the response is indeed a List<dynamic>
-      if (response is List) {
-        return response
-            .map((blog) => BlogModel.fromJson(blog).copyWith(
-                  posterName: blog['poster_name'],
-                ))
-            .toList();
-      } else {
-        throw Exception('Unexpected response type: ${response.runtimeType}');
-      }
-    } on PostgrestException catch (e) {
-      throw ServerException(e.message);
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
-
-  @override
   Future<void> insertBlogTopic({
     required String blogId,
     required String topicId,
@@ -228,7 +256,10 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
   @override
   Future<List<Topic>> getAllBlogTopics() async {
     try {
-      final response = await supabaseClient.from('topics').select('id, name');
+      final response = await supabaseClient
+          .from('topics')
+          .select('id, name')
+          .order('name', ascending: true);
 
       return (response as List<dynamic>).map((topic) {
         return Topic(

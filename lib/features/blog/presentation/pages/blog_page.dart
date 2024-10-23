@@ -13,8 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
-import 'package:multi_select_flutter/dialog/mult_select_dialog.dart';
-import 'package:multi_select_flutter/util/multi_select_item.dart';
 
 class BlogPage extends StatefulWidget {
   static route() => MaterialPageRoute(builder: (context) => const BlogPage());
@@ -35,7 +33,9 @@ class _BlogPageState extends State<BlogPage>
       PagingController(firstPageKey: 1);
   final Set<String> _loadedAllBlogIds = {};
   final Set<String> _loadedFollowedBlogIds = {};
+  final Set<String> _filteredLoadedFollowedBlogIds = {};
   final List<Topic> _selectedTopics = [];
+
   List<Topic> _allBlogTopics = [];
 
   @override
@@ -86,9 +86,7 @@ class _BlogPageState extends State<BlogPage>
 
         final newItems = (state as BlogsDisplaySuccess).blogs;
 
-        for (var blog in newItems) {
-          print(blog);
-        }
+        for (var blog in newItems) {}
 
         // Filter out duplicate blogs
         final filteredItems = newItems
@@ -112,6 +110,52 @@ class _BlogPageState extends State<BlogPage>
     }
   }
 
+  Future<void> _fetchFollowedBlogsPage(int pageKey) async {
+    try {
+      final bloc = context.read<BlogBloc>();
+
+      // Get selected topic IDs
+      List<String>? topicIds = _selectedTopics.isNotEmpty
+          ? _selectedTopics.map((topic) => topic.id).toList()
+          : null;
+
+      if (pageKey == 1) {
+        _loadedFollowedBlogIds.clear();
+        _followedBlogsPagingController.refresh();
+      }
+
+      bloc.add(BlogFetchUserFollowBlogs(
+          topicIds: topicIds, page: pageKey, pageSize: _pageSize));
+
+      bloc.stream
+          .firstWhere((state) => state is BlogsDisplayUserFollowSuccess)
+          .then((state) {
+        if (!mounted) return;
+
+        final newItems = (state as BlogsDisplayUserFollowSuccess).blogs;
+
+        final filteredItems = newItems
+            .where((blog) => !_loadedFollowedBlogIds.contains(blog.id))
+            .toList();
+
+        _loadedFollowedBlogIds.addAll(filteredItems.map((blog) => blog.id));
+
+        final isLastPage = filteredItems.length < _pageSize;
+
+        if (isLastPage) {
+          _followedBlogsPagingController.appendLastPage(filteredItems);
+        } else {
+          final nextPageKey = pageKey + 1;
+          _followedBlogsPagingController.appendPage(filteredItems, nextPageKey);
+        }
+      });
+    } catch (error) {
+      if (mounted) {
+        _followedBlogsPagingController.error = error;
+      }
+    }
+  }
+
   void _openFilterBox(BuildContext context) async {
     await showDialog(
       context: context,
@@ -125,78 +169,11 @@ class _BlogPageState extends State<BlogPage>
               _selectedTopics.addAll(selectedTopics);
             });
 
-            // Print the selected topics
-            print("Selected Topics:");
-            for (var selected in _selectedTopics) {
-              print("Topic ID: ${selected.id}, Topic Name: ${selected.name}");
-            }
-
-            // Refresh the blogs list with the new filter
             _refreshBlogs();
           },
         );
       },
     );
-  }
-
-  Future<void> _fetchFollowedBlogsPage(int pageKey) async {
-    try {
-      final bloc = context.read<BlogBloc>();
-
-      print('Fetching blogs for page $pageKey');
-      bloc.add(BlogFetchUserFollowBlogs(page: pageKey, pageSize: _pageSize));
-
-      // Listen for the state
-      await for (final state in bloc.stream) {
-        if (state is BlogsDisplayUserFollowSuccess) {
-          if (!mounted) {
-            print('Widget not mounted');
-            return; // Ensure the widget is still mounted
-          }
-
-          final newItems = state.blogs; // This should be List<BlogModel>
-          print('Fetched blogs: ${newItems.length}');
-
-          // Log current loaded blog IDs
-          print('Loaded blog IDs: $_loadedFollowedBlogIds');
-
-          // Filter out duplicate blogs
-          final filteredItems = newItems
-              .where((blog) => !_loadedFollowedBlogIds.contains(blog.id))
-              .toList();
-          print('Filtered items: ${filteredItems.length}');
-
-          // Add the new unique blog IDs to the set
-          _loadedFollowedBlogIds.addAll(filteredItems.map((blog) => blog.id));
-
-          final isLastPage = filteredItems.length < _pageSize;
-          if (isLastPage) {
-            _followedBlogsPagingController.appendLastPage(filteredItems);
-            print('Last page reached');
-          } else {
-            final nextPageKey = pageKey + 1;
-            _followedBlogsPagingController.appendPage(
-                filteredItems, nextPageKey);
-            print('Next page key: $nextPageKey');
-          }
-
-          break; // Exit the loop after processing the successful state
-        } else if (state is BlogFailure) {
-          // Handle any error states if necessary
-          if (mounted) {
-            print('Error fetching followed blogs: ${state.error}');
-            _followedBlogsPagingController.error =
-                state.error; // Handle error accordingly
-          }
-          break; // Exit on error state
-        }
-      }
-    } catch (error) {
-      if (mounted) {
-        print('Error fetching followed blogs: $error');
-        _followedBlogsPagingController.error = error;
-      }
-    }
   }
 
   Future<void> _toggleLike(String blogId, bool isLiked) async {
@@ -226,6 +203,7 @@ class _BlogPageState extends State<BlogPage>
 
   void _refreshBlogs() {
     _allBlogsPagingController.refresh();
+    _followedBlogsPagingController.refresh();
     _loadedAllBlogIds.clear();
   }
 

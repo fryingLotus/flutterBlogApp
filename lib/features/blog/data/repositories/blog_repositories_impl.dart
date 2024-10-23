@@ -94,13 +94,15 @@ class BlogRepositoriesImpl implements BlogRepository {
   }
 
   @override
-  Future<Either<Failures, List<Blog>>> getUserBlogs(String userId) async {
+  Future<Either<Failures, List<Blog>>> getUserBlogs(
+      {List<String>? topicIds, required String userId}) async {
     try {
       if (!await (connectionChecker.isConnected)) {
         final blogs = blogLocalDataSource.loadBlogs();
         return right(blogs);
       }
-      final blogs = await blogRemoteDataSource.getUserBlogs(userId);
+      final blogs = await blogRemoteDataSource.getUserBlogs(
+          userId: userId, topicIds: topicIds);
       blogLocalDataSource.uploadLocalBlog(blogs: blogs);
       return right(blogs);
     } on ServerException catch (e) {
@@ -197,14 +199,14 @@ class BlogRepositoriesImpl implements BlogRepository {
 
   @override
   Future<Either<Failures, List<Blog>>> getBlogsFromFollowedUsers(
-      {int page = 1, int pageSize = 10}) async {
+      {List<String>? topicIds, int page = 1, int pageSize = 10}) async {
     try {
       if (!await (connectionChecker.isConnected)) {
         final blogs = blogLocalDataSource.loadBlogs();
         return right(blogs);
       }
       final blogs = await blogRemoteDataSource.getBlogsFromFollowedUsers(
-          page: page, pageSize: pageSize);
+          topicIds: topicIds, page: page, pageSize: pageSize);
       blogLocalDataSource.uploadLocalBlog(blogs: blogs);
       return right(blogs);
     } on ServerException catch (e) {

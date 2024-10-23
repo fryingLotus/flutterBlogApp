@@ -59,13 +59,19 @@ class _CommentSectionState extends State<CommentSection> {
 
   Future<void> _toggleLike(String commentId, bool isLiked) async {
     try {
+      final userId =
+          (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+      final String uniqueKey =
+          '${userId}_$commentId'; // Composite key of userId and commentId
+
       if (isLiked) {
         context.read<CommentBloc>().add(CommentUnlike(commentId: commentId));
       } else {
         context.read<CommentBloc>().add(CommentLike(commentId: commentId));
       }
 
-      _likesBox.put(commentId, !isLiked);
+      _likesBox.put(
+          uniqueKey, !isLiked); // Use the uniqueKey instead of just commentId
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $e')),
@@ -103,6 +109,8 @@ class _CommentSectionState extends State<CommentSection> {
                 showSnackBar(context, "Comment updated successfully");
               } else if (state is CommentLikeSuccess ||
                   state is CommentUnlikeSuccess) {
+                setState(() {});
+                //_fetchComments();
                 showSnackBar(context, "Success!");
               } else if (state is CommentFailure) {
                 showSnackBar(context, state.error, isError: true);
@@ -158,29 +166,29 @@ class _CommentSectionState extends State<CommentSection> {
   }
 
   Widget _buildCommentsList(List<Comment> comments) {
-    final commentModels =
-        comments.map((comment) => CommentModel.fromComment(comment)).toList();
-
+    for (var comment in comments) {
+      print("Comments:"); // This will print each comment in the console
+      print(comment.toString()); // This will print each comment in the console
+    }
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 500),
       child: SingleChildScrollView(
         controller: _scrollController,
         child: Column(
-          children: commentModels
-              .map((comment) => _buildCommentTile(comment))
-              .toList(),
+          children:
+              comments.map((comment) => _buildCommentTile(comment)).toList(),
         ),
       ),
     );
   }
 
-  Widget _buildCommentTile(CommentModel comment) {
-    final isLiked = _likesBox.get(comment.id, defaultValue: false) ?? false;
-    final updatedLikesCount =
-        isLiked ? (comment.likes_count ?? 0) + 1 : (comment.likes_count ?? 0);
-
-    final posterId =
+  Widget _buildCommentTile(Comment comment) {
+    final userId =
         (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+    final String uniqueKey = '${userId}_${comment.id}';
+    final isLiked = _likesBox.get(uniqueKey, defaultValue: false) ?? false;
+    final updatedLikesCount = comment.likes_count ?? 0;
+
     return ListTile(
       title: Row(
         children: [
@@ -196,24 +204,7 @@ class _CommentSectionState extends State<CommentSection> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('${comment.posterName}'),
-                  posterId == comment.posterId
-                      ? GestureDetector(
-                          onTap: () => showOptions(
-                            context: context,
-                            onEdit: () =>
-                                _editComment(comment.id, comment.content),
-                            onDelete: () => _deleteComment(comment.id),
-                            commentId: comment.id,
-                          ),
-                          child: const Icon(Icons.more_vert),
-                        )
-                      : const SizedBox.shrink(),
-                ],
-              ),
+              Text('${comment.posterName}'),
               Text(
                 formatDateBydMMMYYYY(comment.updatedAt),
                 style: const TextStyle(
@@ -225,21 +216,11 @@ class _CommentSectionState extends State<CommentSection> {
           ),
         ],
       ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 4),
-          Text(
-            comment.content,
-            style: const TextStyle(fontSize: 16),
-            overflow: TextOverflow.visible,
-          ),
-        ],
-      ),
+      subtitle: Text(comment.content),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$updatedLikesCount'),
+          Text("$updatedLikesCount"),
           IconButton(
             icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border,
                 color: isLiked ? Colors.red : null),

@@ -26,7 +26,7 @@ class CommentModel extends Comment {
       updatedAt: map['updated_at'] == null
           ? DateTime.now()
           : DateTime.parse(map['updated_at']),
-      likes_count: map['likes_count'] != null ? map['likes_count'] as int : 0,
+      likes_count: map['likes_count'] as int? ?? 0, // Handle possible null
     );
   }
   factory CommentModel.fromComment(Comment comment) {

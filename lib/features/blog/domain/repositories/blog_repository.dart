@@ -17,8 +17,9 @@ abstract interface class BlogRepository {
       {List<String>? topicIds, int page, int pageSize});
 
   Future<Either<Failures, List<Blog>>> getBlogsFromFollowedUsers(
-      {int page, int pageSize});
-  Future<Either<Failures, List<Blog>>> getUserBlogs(String userId);
+      {List<String>? topicIds, int page, int pageSize});
+  Future<Either<Failures, List<Blog>>> getUserBlogs(
+      {List<String>? topicIds, required String userId});
   Future<Either<Failures, bool>> deleteBlog(String blogId);
 
   Future<Either<Failures, Blog>> updateBlog({

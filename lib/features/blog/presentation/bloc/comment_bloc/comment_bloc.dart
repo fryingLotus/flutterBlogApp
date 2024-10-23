@@ -130,12 +130,19 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
         await _likeComment(LikeCommentParams(commentId: event.commentId));
 
     res.fold(
-      (failure) => emit(CommentFailure(failure.message)),
+      (failure) => emit(CommentFailure(
+        failure.message,
+      )),
       (success) {
-        _updateLikeStatus(event.commentId, true);
+        _updateLikeStatusAndCount(event.commentId, true, increment: true);
         emit(CommentLikeSuccess(commentId: event.commentId));
-        emit(CommentsDisplaySuccess(
-            comments: _comments!, hasMore: true)); // Re-emit with updated likes
+        // Emit updated comments state
+        if (_comments != null) {
+          emit(CommentsDisplaySuccess(
+            comments: _comments!,
+            hasMore: true,
+          ));
+        }
       },
     );
   }
@@ -145,22 +152,30 @@ class CommentBloc extends Bloc<CommentEvent, CommentState> {
         await _unlikeComment(UnlikeCommentParams(commentId: event.commentId));
 
     res.fold(
-      (failure) => emit(CommentFailure(failure.message)),
+      (failure) => emit(CommentFailure(
+        failure.message,
+      )),
       (success) {
-        _updateLikeStatus(event.commentId, false);
+        _updateLikeStatusAndCount(event.commentId, false, increment: false);
         emit(CommentUnlikeSuccess(commentId: event.commentId));
-        emit(CommentsDisplaySuccess(
+        // Emit updated comments state
+        if (_comments != null) {
+          emit(CommentsDisplaySuccess(
             comments: _comments!,
-            hasMore: true)); // Re-emit with updated unlikes
+            hasMore: true,
+          ));
+        }
       },
     );
   }
 
-  void _updateLikeStatus(String commentId, bool isLiked) {
+  void _updateLikeStatusAndCount(String commentId, bool isLiked,
+      {required bool increment}) {
     _comments = _comments?.map((comment) {
       if (comment.id == commentId) {
         return comment.copyWith(
           isLiked: isLiked,
+          likes_count: (comment.likes_count ?? 0) + (increment ? 1 : -1),
         );
       }
       return comment;

@@ -47,4 +47,9 @@ class Comment {
       isLiked: isLiked ?? this.isLiked,
     );
   }
+
+  @override
+  String toString() {
+    return 'Comment{id: $id, posterId: $posterId, blogId: $blogId, content: $content, posterAvatar: $posterAvatar, updatedAt: $updatedAt, createdAt: $createdAt, posterName: $posterName, likes_count: $likes_count, isLiked: $isLiked}';
+  }
 }
