@@ -24,6 +24,7 @@ abstract interface class BlogRemoteDataSource {
       {required String blogId, required String topicId});
   Future<List<Topic>> getAllBlogTopics();
   Future<void> updateBlogTopics(String blogId, List<Topic> topics);
+  Future<List<BlogModel>> searchBlogs({required String title});
 }
 
 class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
@@ -287,6 +288,29 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
       }).toList();
 
       await supabaseClient.from('blog_topics').insert(topicEntries);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<BlogModel>> searchBlogs({required String title}) async {
+    try {
+      final blogs = await supabaseClient.rpc("search_blogs", params: {
+        "title_search": title,
+      });
+
+      return blogs.map<BlogModel>((blog) {
+        return BlogModel.fromJson({
+          ...blog,
+          'topics': (blog['topics'] as List<dynamic>?)
+                  ?.map((topic) => topic.toString())
+                  .toList() ??
+              [],
+        });
+      }).toList();
     } on PostgrestException catch (e) {
       throw ServerException(e.message);
     } catch (e) {

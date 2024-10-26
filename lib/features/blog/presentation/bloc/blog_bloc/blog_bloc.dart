@@ -9,6 +9,7 @@ import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_blogs_from_followed_user.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/like_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/search_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/unlike_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/update_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/upload_blog.dart';
@@ -28,6 +29,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final UnlikeBlog _unlikeBlog;
   final GetBlogsFromFollowedUser _getBlogsFromFollowedUser;
   final GetAllBlogTopics _getAllBlogTopics;
+  final SearchBlogs _searchBlogs;
   List<Blog>? _blogs;
   BlogBloc(
       {required UploadBlog uploadBlog,
@@ -38,6 +40,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
       required LikeBlog likeBlog,
       required UnlikeBlog unlikeBlog,
       required GetAllBlogTopics getAllBlogTopics,
+      required SearchBlogs searchBlogs,
       required GetBlogsFromFollowedUser getBlogsFromFollowedUser})
       : _uploadBlog = uploadBlog,
         _getAllBlogs = getAllBlogs,
@@ -48,6 +51,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
         _unlikeBlog = unlikeBlog,
         _getBlogsFromFollowedUser = getBlogsFromFollowedUser,
         _getAllBlogTopics = getAllBlogTopics,
+        _searchBlogs = searchBlogs,
         super(BlogInitial()) {
     //on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
@@ -59,6 +63,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     on<BlogLike>(_onLikeBlog);
     on<BlogUnlike>(_onUnlikeBlog);
     on<BlogFetchAllBlogTopics>(_onFetchBlogTopics);
+    on<BlogSearch>(_onSearchBlogs);
   }
   void _onBlogUpload(
     BlogUpload event,
@@ -242,6 +247,19 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
       },
       (r) {
         emit(BlogTopicsDisplaySuccess(r));
+      },
+    );
+  }
+
+  void _onSearchBlogs(BlogSearch event, Emitter<BlogState> emit) async {
+    emit(BlogLoading());
+    final res = await _searchBlogs(SearchBlogsParams(title: event.title));
+    res.fold(
+      (l) {
+        emit(BlogFailure(l.message));
+      },
+      (r) {
+        emit(BlogSearchSuccess(r));
       },
     );
   }

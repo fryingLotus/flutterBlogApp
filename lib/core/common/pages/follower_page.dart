@@ -3,9 +3,9 @@ import 'package:blogapp/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:blogapp/core/common/pages/subpage/list_followers_page.dart'; // Import the correct page
 import 'package:blogapp/core/common/pages/subpage/list_following_page.dart';
 import 'package:blogapp/core/common/widgets/loader.dart';
+import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_owned_page.dart';
-import 'package:blogapp/features/blog/presentation/widgets/blog_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -158,6 +158,9 @@ class _FollowerPageState extends State<FollowerPage> {
                                 child: const Text(
                                   'User Follows',
                                   textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: AppPallete.gradient1,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ],
@@ -178,6 +181,9 @@ class _FollowerPageState extends State<FollowerPage> {
                                 child: const Text(
                                   'Follower Count',
                                   textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: AppPallete.gradient2,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ],
@@ -198,6 +204,9 @@ class _FollowerPageState extends State<FollowerPage> {
                                 child: const Text(
                                   'Blogs Count',
                                   textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: AppPallete.gradient3,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                             ],

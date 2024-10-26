@@ -57,3 +57,9 @@ final class BlogTopicsDisplaySuccess extends BlogState {
 
   BlogTopicsDisplaySuccess(this.topics);
 }
+
+final class BlogSearchSuccess extends BlogState {
+  final List<Blog> blogs;
+
+  BlogSearchSuccess(this.blogs);
+}

@@ -40,6 +40,7 @@ import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_blogs_from_followed_user.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/like_blog.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/search_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/unlike_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/update_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/upload_blog.dart';

@@ -34,4 +34,5 @@ abstract interface class BlogRepository {
   Future<Either<Failures, bool>> likeBlog(String blogId);
   Future<Either<Failures, bool>> unlikeBlog(String blogId);
   Future<Either<Failures, List<Topic>>> getAllBlogTopics();
+  Future<Either<Failures, List<Blog>>> searchBlogs({required String title});
 }

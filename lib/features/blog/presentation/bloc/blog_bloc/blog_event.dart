@@ -85,4 +85,10 @@ final class BlogUnlike extends BlogEvent {
   BlogUnlike({required this.blogId});
 }
 
+final class BlogSearch extends BlogEvent {
+  final String title;
+
+  BlogSearch({required this.title});
+}
+
 final class BlogFetchAllBlogTopics extends BlogEvent {}
