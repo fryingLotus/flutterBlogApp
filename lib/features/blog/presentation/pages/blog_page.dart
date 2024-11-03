@@ -25,6 +25,7 @@ class BlogPage extends StatefulWidget {
 class _BlogPageState extends State<BlogPage>
     with SingleTickerProviderStateMixin {
   late Box<bool> _likesBox;
+  late Box<bool> _bookmarksBox;
   static const int _pageSize = 10;
   late TabController _tabController;
   final PagingController<int, Blog> _allBlogsPagingController =
@@ -33,7 +34,6 @@ class _BlogPageState extends State<BlogPage>
       PagingController(firstPageKey: 1);
   final Set<String> _loadedAllBlogIds = {};
   final Set<String> _loadedFollowedBlogIds = {};
-  final Set<String> _filteredLoadedFollowedBlogIds = {};
   final List<Topic> _selectedTopics = [];
 
   List<Topic> _allBlogTopics = [];
@@ -41,7 +41,7 @@ class _BlogPageState extends State<BlogPage>
   @override
   void initState() {
     super.initState();
-    _openLikesBox();
+    _openHivesBox();
     _tabController = TabController(length: 2, vsync: this);
 
     context.read<BlogBloc>().add(BlogFetchAllBlogTopics());
@@ -62,8 +62,9 @@ class _BlogPageState extends State<BlogPage>
     });
   }
 
-  Future<void> _openLikesBox() async {
+  Future<void> _openHivesBox() async {
     _likesBox = Hive.box<bool>(name: 'likesBox');
+    _bookmarksBox = Hive.box<bool>(name: 'bookmarksBox');
   }
 
   Future<void> _fetchAllBlogsPage(int pageKey) async {
@@ -176,6 +177,31 @@ class _BlogPageState extends State<BlogPage>
     );
   }
 
+  Future<void> _toggleBookmark(String blogId) async {
+    try {
+      final userId =
+          (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+      final String uniqueKey = '${userId}_$blogId';
+
+      final isCurrentlyBookmarked =
+          _bookmarksBox.get(uniqueKey, defaultValue: false) ?? false;
+
+      _bookmarksBox.put(uniqueKey, !isCurrentlyBookmarked);
+
+      if (mounted) {
+        showSnackBar(
+            context,
+            !isCurrentlyBookmarked
+                ? "Added to bookmarks"
+                : "Removed from bookmarks");
+      }
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(context, "Failed to update bookmark", isError: true);
+      }
+    }
+  }
+
   Future<void> _toggleLike(String blogId, bool isLiked) async {
     try {
       final userId =
@@ -256,9 +282,10 @@ class _BlogPageState extends State<BlogPage>
                         .id;
                 final String uniqueKey = '${userId}_${blog.id}';
 
-                // Check if the blog is liked from the local storage (Hive)
                 final isLiked =
                     _likesBox.get(uniqueKey, defaultValue: false) ?? false;
+                final isBookmarked =
+                    _bookmarksBox.get(uniqueKey, defaultValue: false) ?? false;
                 final updatedLikesCount = isLiked
                     ? (blog.likes_count ?? 0) + 1
                     : (blog.likes_count ?? 0);
@@ -270,6 +297,10 @@ class _BlogPageState extends State<BlogPage>
                       ? AppPallete.gradient1
                       : AppPallete.gradient2,
                   isLiked: isLiked,
+                  isBookmarked: isBookmarked,
+                  onToggleBookmarked: () async {
+                    await _toggleBookmark(blog.id);
+                  },
                   onToggleLike: () async {
                     await _toggleLike(blog.id, isLiked);
                   },
@@ -290,6 +321,8 @@ class _BlogPageState extends State<BlogPage>
                 // Check if the blog is liked from the local storage (Hive)
                 final isLiked =
                     _likesBox.get(uniqueKey, defaultValue: false) ?? false;
+                final isBookmarked =
+                    _bookmarksBox.get(uniqueKey, defaultValue: false) ?? false;
                 final updatedLikesCount = isLiked
                     ? (blog.likes_count ?? 0) + 1
                     : (blog.likes_count ?? 0);
@@ -301,6 +334,10 @@ class _BlogPageState extends State<BlogPage>
                       ? AppPallete.gradient1
                       : AppPallete.gradient2,
                   isLiked: isLiked,
+                  isBookmarked: isBookmarked,
+                  onToggleBookmarked: () async {
+                    await _toggleBookmark(blog.id);
+                  },
                   onToggleLike: () async {
                     await _toggleLike(blog.id, isLiked);
                   },

@@ -7,6 +7,7 @@ import 'package:blogapp/features/blog/domain/usecases/blogs/delete_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blog_topics.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_all_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_blogs_from_followed_user.dart';
+import 'package:blogapp/features/blog/domain/usecases/blogs/get_bookmarked_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/get_user_blogs.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/like_blog.dart';
 import 'package:blogapp/features/blog/domain/usecases/blogs/search_blogs.dart';
@@ -30,6 +31,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
   final GetBlogsFromFollowedUser _getBlogsFromFollowedUser;
   final GetAllBlogTopics _getAllBlogTopics;
   final SearchBlogs _searchBlogs;
+  final GetBookmarkedBlogs _getBookmarkedBlogs;
   List<Blog>? _blogs;
   BlogBloc(
       {required UploadBlog uploadBlog,
@@ -41,6 +43,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
       required UnlikeBlog unlikeBlog,
       required GetAllBlogTopics getAllBlogTopics,
       required SearchBlogs searchBlogs,
+      required GetBookmarkedBlogs getBookmarkedBlogs,
       required GetBlogsFromFollowedUser getBlogsFromFollowedUser})
       : _uploadBlog = uploadBlog,
         _getAllBlogs = getAllBlogs,
@@ -52,6 +55,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
         _getBlogsFromFollowedUser = getBlogsFromFollowedUser,
         _getAllBlogTopics = getAllBlogTopics,
         _searchBlogs = searchBlogs,
+        _getBookmarkedBlogs = getBookmarkedBlogs,
         super(BlogInitial()) {
     //on<BlogEvent>((event, emit) => emit(BlogLoading()));
     on<BlogUpload>(_onBlogUpload);
@@ -64,6 +68,7 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     on<BlogUnlike>(_onUnlikeBlog);
     on<BlogFetchAllBlogTopics>(_onFetchBlogTopics);
     on<BlogSearch>(_onSearchBlogs);
+    on<BlogFetchBookmarkedBlogs>(_onFetchBookmarkedBlog);
   }
   void _onBlogUpload(
     BlogUpload event,
@@ -160,6 +165,19 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
     );
   }
 
+  void _onFetchBookmarkedBlog(
+      BlogFetchBookmarkedBlogs event, Emitter<BlogState> emit) async {
+    emit(BlogLoading());
+    final res = await _getBookmarkedBlogs(GetBookmarkedBlogsParams(
+        blogIds: event.blogIds, topicIds: event.topicIds));
+    res.fold(
+      (l) => emit(BlogFailure(l.message)),
+      (r) {
+        emit(BlogsDisplayBookmarkSuccess(blogs: r));
+      },
+    );
+  }
+
   void _onDeleteBlog(BlogDelete event, Emitter<BlogState> emit) async {
     emit(BlogLoading());
 
@@ -190,21 +208,6 @@ class BlogBloc extends Bloc<BlogEvent, BlogState> {
       (l) => emit(BlogFailure(l.message)),
       (r) => emit(BlogUnlikeSuccess(event.blogId)),
     );
-  }
-
-  // Helper method to update the like status of a blog locally
-  void _updateLikeStatus(String blogId, bool isLiked) {
-    _blogs = _blogs?.map((blog) {
-      if (blog.id == blogId) {
-        return blog.copyWith(
-          isLiked: isLiked,
-          likes_count: isLiked
-              ? (blog.likes_count ?? 0) + 1
-              : (blog.likes_count ?? 0) - 1,
-        );
-      }
-      return blog;
-    }).toList();
   }
 
   void _onUpdateBlog(BlogUpdate event, Emitter<BlogState> emit) async {

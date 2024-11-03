@@ -67,6 +67,13 @@ final class BlogFetchUserBlogs extends BlogEvent {
   BlogFetchUserBlogs({this.topicIds, required this.userId});
 }
 
+final class BlogFetchBookmarkedBlogs extends BlogEvent {
+  final List<String>? topicIds;
+  final List<String> blogIds;
+
+  BlogFetchBookmarkedBlogs({this.topicIds, required this.blogIds});
+}
+
 final class BlogDelete extends BlogEvent {
   final String blogId;
 

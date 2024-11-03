@@ -1,7 +1,6 @@
-import 'package:blogapp/core/common/cubits/app_theme/theme_cubit.dart'; // Import the ThemeCubit
+import 'package:blogapp/core/common/cubits/app_theme/theme_cubit.dart';
 import 'package:blogapp/core/common/cubits/app_theme/theme_state.dart';
 import 'package:blogapp/core/common/widgets/navigation_tile.dart';
-import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/features/auth/presentation/pages/account_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +54,6 @@ class SettingsPage extends StatelessWidget {
                 ],
               ),
             ),
-          
             NavigationTile(
               title: "Account",
               routeBuilder: (context) => const AccountPage(),

@@ -6,6 +6,7 @@ import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
 import 'package:blogapp/features/auth/presentation/pages/login_page.dart';
 import 'package:blogapp/features/blog/presentation/layout/blog_layout_page.dart';
+import 'package:blogapp/features/blog/presentation/pages/blog_bookmark_page.dart';
 import 'package:blogapp/features/blog/presentation/pages/blog_owned_page.dart';
 import 'package:blogapp/features/blog/presentation/pages/settings_page.dart';
 import 'package:blogapp/features/blog/presentation/widgets/drawer_tile.dart';
@@ -53,6 +54,14 @@ class MyDrawer extends StatelessWidget {
             },
           ),
           DrawerTile(
+            title: "Bookmarks",
+            leading: const Icon(Icons.bookmark),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(context, BlogBookmarkPage.route());
+            },
+          ),
+          DrawerTile(
             title: "Settings",
             leading: const Icon(Icons.settings),
             onTap: () {
@@ -86,7 +95,7 @@ class MyDrawer extends StatelessWidget {
               title: "Logout",
               leading: const Icon(Icons.logout),
               onTap: () {
-                Navigator.pop(context); // Close the drawer
+                Navigator.pop(context);
                 context.read<AuthBloc>().add(AuthLogout());
                 Navigator.pushAndRemoveUntil(
                   context,

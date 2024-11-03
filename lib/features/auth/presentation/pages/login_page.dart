@@ -55,7 +55,12 @@ class _LoginPageState extends State<LoginPage> {
               },
               builder: (context, state) {
                 if (state is AuthLoading) {
-                  return const Loader();
+                  return SizedBox(
+                    height: MediaQuery.of(context)
+                        .size
+                        .height, // Set full screen height
+                    child: const Loader(),
+                  );
                 }
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -182,4 +187,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-

@@ -111,6 +111,24 @@ class BlogRepositoriesImpl implements BlogRepository {
   }
 
   @override
+  Future<Either<Failures, List<Blog>>> fetchBlogsByBookmarks(
+      {List<String>? topicIds, required List<String> blogIds}) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        final blogs = blogLocalDataSource.loadBlogs();
+        return right(blogs);
+      }
+      final blogs = await blogRemoteDataSource.fetchBlogsByBookmarks(
+          blogIds: blogIds, topicIds: topicIds);
+
+      blogLocalDataSource.uploadLocalBlog(blogs: blogs);
+      return right(blogs);
+    } on ServerException catch (e) {
+      return left(Failures(e.message));
+    }
+  }
+
+  @override
   Future<Either<Failures, bool>> deleteBlog(String blogId) async {
     try {
       await blogRemoteDataSource.deleteBlog(blogId);

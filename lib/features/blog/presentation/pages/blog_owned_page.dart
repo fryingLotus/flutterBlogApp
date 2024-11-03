@@ -28,6 +28,7 @@ class BlogOwnedPage extends StatefulWidget {
 
 class _BlogOwnedPageState extends State<BlogOwnedPage> {
   late Box<bool> _likesBox;
+  late Box<bool> _bookmarksBox;
   late String loggedInUserId;
   final List<Topic> _selectedTopics = [];
   List<Topic> _allBlogTopics = [];
@@ -36,7 +37,7 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
   @override
   void initState() {
     super.initState();
-    _initializeLikesBox();
+    _initializeHiveBox();
     context.read<BlogBloc>().add(BlogFetchAllBlogTopics());
     context.read<BlogBloc>().stream.listen((state) {
       if (state is BlogTopicsDisplaySuccess) {
@@ -58,8 +59,9 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
     _currentBlogs = blogs;
   }
 
-  Future<void> _initializeLikesBox() async {
+  Future<void> _initializeHiveBox() async {
     _likesBox = Hive.box<bool>(name: 'likesBox');
+    _bookmarksBox = Hive.box<bool>(name: 'bookmarksBox');
   }
 
   Future<void> _fetchUserBlogs() async {
@@ -103,7 +105,6 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
       final String uniqueKey = '${loggedInUserId}_$blogId';
       final currentCount = _localLikesCount[blogId] ?? 0;
 
-      // Update local storage and state
       _likesBox.put(uniqueKey, !isLiked);
 
       setState(() {
@@ -113,7 +114,6 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
           _localLikesCount[blogId] = currentCount - 1;
         }
 
-        // Update the blog in _currentBlogs
         _currentBlogs = _currentBlogs.map((blog) {
           if (blog.id == blogId) {
             return blog.copyWith(
@@ -125,17 +125,40 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
         }).toList();
       });
 
-      // Dispatch the event
       if (isLiked) {
         context.read<BlogBloc>().add(BlogUnlike(blogId: blogId));
       } else {
         context.read<BlogBloc>().add(BlogLike(blogId: blogId));
       }
     } catch (e) {
-      // Revert changes on error
       final String uniqueKey = '${loggedInUserId}_$blogId';
       _likesBox.put(uniqueKey, isLiked);
       showSnackBar(context, "An error has occurred", isError: true);
+    }
+  }
+
+  Future<void> _toggleBookmark(String blogId) async {
+    try {
+      final userId =
+          (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+      final String uniqueKey = '${userId}_$blogId';
+
+      final isCurrentlyBookmarked =
+          _bookmarksBox.get(uniqueKey, defaultValue: false) ?? false;
+
+      _bookmarksBox.put(uniqueKey, !isCurrentlyBookmarked);
+
+      if (mounted) {
+        showSnackBar(
+            context,
+            !isCurrentlyBookmarked
+                ? "Added to bookmarks"
+                : "Removed from bookmarks");
+      }
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(context, "Failed to update bookmark", isError: true);
+      }
     }
   }
 
@@ -160,7 +183,7 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                ), // Show back button if viewing another user's blogs
+                ),
           actions: [
             if (isOwnProfile)
               IconButton(
@@ -187,6 +210,8 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
             } else if (state is UserBlogsDisplaySuccess) {
               // Initialize local likes count when blogs are loaded
               _initializeLocalLikesCount(state.userBlogs);
+            } else if (state is BlogDeleteSuccess) {
+              _fetchUserBlogs();
             }
           },
           builder: (context, state) {
@@ -211,6 +236,9 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
                     final updatedLikesCount =
                         _localLikesCount[blog.id] ?? blog.likes_count ?? 0;
 
+                    final isBookmarked =
+                        _bookmarksBox.get(uniqueKey, defaultValue: false) ??
+                            false;
                     return BlogCard(
                       key: ValueKey('${blog.id}_${updatedLikesCount}_$isLiked'),
                       blog: blog.copyWith(likes_count: updatedLikesCount),
@@ -218,6 +246,10 @@ class _BlogOwnedPageState extends State<BlogOwnedPage> {
                           ? AppPallete.gradient1
                           : AppPallete.gradient2,
                       isLiked: isLiked,
+                      isBookmarked: isBookmarked,
+                      onToggleBookmarked: () async {
+                        await _toggleBookmark(blog.id);
+                      },
                       onToggleLike: () => _toggleLike(blog.id, isLiked),
                     );
                   },

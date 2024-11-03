@@ -23,6 +23,7 @@ class _BlogSearchPageState extends State<BlogSearchPage>
   final TextEditingController searchController = TextEditingController();
   late TabController _tabController;
   late Box<bool> _likesBox;
+  late Box<bool> _bookmarksBox;
   late String loggedInUserId;
   final Map<String, int> _localLikesCount = {};
 
@@ -30,13 +31,14 @@ class _BlogSearchPageState extends State<BlogSearchPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _initializeLikesBox();
+    _initializeHiveBox();
     loggedInUserId =
         (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
   }
 
-  Future<void> _initializeLikesBox() async {
+  Future<void> _initializeHiveBox() async {
     _likesBox = Hive.box<bool>(name: 'likesBox');
+    _bookmarksBox = Hive.box<bool>(name: 'bookmarksBox');
   }
 
   void _performSearch() {
@@ -72,6 +74,31 @@ class _BlogSearchPageState extends State<BlogSearchPage>
       final String uniqueKey = '${loggedInUserId}_$blogId';
       _likesBox.put(uniqueKey, isLiked);
       showSnackBar(context, "An error has occurred", isError: true);
+    }
+  }
+
+  Future<void> _toggleBookmark(String blogId) async {
+    try {
+      final userId =
+          (context.read<AppUserCubit>().state as AppUserLoggedIn).user.id;
+      final String uniqueKey = '${userId}_$blogId';
+
+      final isCurrentlyBookmarked =
+          _bookmarksBox.get(uniqueKey, defaultValue: false) ?? false;
+
+      _bookmarksBox.put(uniqueKey, !isCurrentlyBookmarked);
+
+      if (mounted) {
+        showSnackBar(
+            context,
+            !isCurrentlyBookmarked
+                ? "Added to bookmarks"
+                : "Removed from bookmarks");
+      }
+    } catch (e) {
+      if (mounted) {
+        showSnackBar(context, "Failed to update bookmark", isError: true);
+      }
     }
   }
 
@@ -183,6 +210,9 @@ class _BlogSearchPageState extends State<BlogSearchPage>
                             final isLiked =
                                 _likesBox.get(uniqueKey, defaultValue: false) ??
                                     false;
+                            final isBookmarked = _bookmarksBox.get(uniqueKey,
+                                    defaultValue: false) ??
+                                false;
                             final updatedLikesCount =
                                 _localLikesCount[blog.id] ??
                                     blog.likes_count ??
@@ -196,6 +226,10 @@ class _BlogSearchPageState extends State<BlogSearchPage>
                               color: index % 2 == 0
                                   ? AppPallete.gradient1
                                   : AppPallete.gradient2,
+                              isBookmarked: isBookmarked,
+                              onToggleBookmarked: () async {
+                                await _toggleBookmark(blog.id);
+                              },
                               isLiked: isLiked,
                               onToggleLike: () => _toggleLike(blog.id, isLiked),
                             );

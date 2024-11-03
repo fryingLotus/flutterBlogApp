@@ -25,6 +25,8 @@ abstract interface class BlogRemoteDataSource {
   Future<List<Topic>> getAllBlogTopics();
   Future<void> updateBlogTopics(String blogId, List<Topic> topics);
   Future<List<BlogModel>> searchBlogs({required String title});
+  Future<List<BlogModel>> fetchBlogsByBookmarks(
+      {List<String>? topicIds, required List<String> blogIds});
 }
 
 class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
@@ -142,8 +144,7 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
       final userId = supabaseClient.auth.currentUser?.id;
 
       final List<String> topicIdArray = topicIds ?? [];
-      // Fetch the blogs
-      final response =
+      final blogs =
           await supabaseClient.rpc('get_blogs_from_followed_users', params: {
         'current_user_id': userId,
         'input_topic_ids': topicIdArray.isEmpty ? null : topicIdArray,
@@ -151,9 +152,39 @@ class BlogRemoteDataSourceImpl implements BlogRemoteDataSource {
         'page_size': pageSize,
       });
 
-      // Check if the response is indeed a List<dynamic>
-      if (response is List<dynamic>) {
-        return response.map<BlogModel>((blog) {
+      if (blogs is List<dynamic>) {
+        return blogs.map<BlogModel>((blog) {
+          return BlogModel.fromJson({
+            ...blog,
+            'topics': (blog['topics'] as List<dynamic>?)
+                    ?.map((topic) => topic.toString())
+                    .toList() ??
+                [],
+          });
+        }).toList();
+      } else {
+        throw Exception('Unexpected response format');
+      }
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
+  Future<List<BlogModel>> fetchBlogsByBookmarks(
+      {List<String>? topicIds, required List<String> blogIds}) async {
+    try {
+      final List<String> topicIdArray = topicIds ?? [];
+
+      final blogs = await supabaseClient.rpc('get_bookmarked_blogs', params: {
+        'input_blog_ids': blogIds,
+        'input_topic_ids': topicIdArray.isEmpty ? null : topicIdArray,
+      });
+
+      if (blogs is List<dynamic>) {
+        return blogs.map<BlogModel>((blog) {
           return BlogModel.fromJson({
             ...blog,
             'topics': (blog['topics'] as List<dynamic>?)

@@ -46,6 +46,12 @@ final class BlogsDisplayUserFollowSuccess extends BlogState {
   BlogsDisplayUserFollowSuccess(this.blogs, {this.isLastPage = false});
 }
 
+final class BlogsDisplayBookmarkSuccess extends BlogState {
+  final List<Blog> blogs;
+
+  BlogsDisplayBookmarkSuccess({required this.blogs});
+}
+
 final class UserBlogsDisplaySuccess extends BlogState {
   final List<Blog> userBlogs;
 
