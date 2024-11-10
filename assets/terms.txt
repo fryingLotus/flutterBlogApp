@@ -1,0 +1,31 @@
+Terms and Conditions for Diblog 
+
+Effective Date: 2023-2020
+
+By using Diblog ("Diblog"), you agree to comply with the following terms and conditions:
+
+    License Grant:
+        [Your App Name] is licensed under the MIT License.
+        You may use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the App, provided that the above copyright notice and this permission notice are included in all copies or substantial portions of the App.
+
+    No Warranty:
+        The App is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, or non-infringement.
+        In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the App or the use or other dealings in the App.
+
+    Use of the App:
+        You are responsible for ensuring that your use of the App complies with all applicable local laws and regulations.
+        You may not use the App for any illegal or unauthorized purpose.
+
+    Third-Party Services:
+        The App may integrate with third-party services or APIs. These services are governed by their own terms and conditions, and by using the App, you agree to comply with those third-party terms.
+
+    Modification and Termination:
+        The developer reserves the right to modify, suspend, or terminate the App at any time without notice.
+        These terms may also be updated, and continued use of the App after such updates constitutes acceptance of the new terms.
+
+    Governing Law:
+        These Terms and Conditions are governed by the laws of [Your Country/State].
+        Any disputes arising from the use of the App will be subject to the exclusive jurisdiction of the courts in [Your Jurisdiction].
+
+    Contact Information:
+        If you have any questions or concerns about these Terms and Conditions, please contact us at [Your Contact Information].
