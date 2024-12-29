@@ -167,8 +167,8 @@ class _CommentSectionState extends State<CommentSection> {
 
   Widget _buildCommentsList(List<Comment> comments) {
     for (var comment in comments) {
-      print("Comments:"); // This will print each comment in the console
-      print(comment.toString()); // This will print each comment in the console
+      print("Comments:");
+      print(comment.toString());
     }
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 500),
@@ -220,6 +220,16 @@ class _CommentSectionState extends State<CommentSection> {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (userId == comment.posterId) ...[
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.blue),
+              onPressed: () => _editComment(comment.id, comment.content),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _deleteComment(comment.id),
+            ),
+          ],
           Text("$updatedLikesCount"),
           IconButton(
             icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border,

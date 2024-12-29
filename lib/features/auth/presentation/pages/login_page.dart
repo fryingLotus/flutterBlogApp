@@ -1,4 +1,5 @@
 import 'package:blogapp/core/common/widgets/loader.dart';
+import 'package:blogapp/core/common/widgets/separator_with_text.dart';
 import 'package:blogapp/core/themes/app_pallete.dart';
 import 'package:blogapp/core/utils/show_snackbar.dart';
 import 'package:blogapp/features/auth/presentation/bloc/auth_bloc/auth_bloc.dart';
@@ -142,7 +143,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
+                    const SeparatorWithText(),
+                    const SizedBox(height: 10),
                     // Google Sign In Button
                     Container(
                       width: double.infinity,
@@ -151,8 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                           context.read<AuthBloc>().add(AuthGoogleSignIn());
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Colors.white, // Set the button color to white
+                          backgroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),

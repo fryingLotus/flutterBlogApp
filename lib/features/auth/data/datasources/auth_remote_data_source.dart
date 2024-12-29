@@ -104,12 +104,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final user = response.user;
 
       if (user == null) {
-        throw const ServerException('User is null!');
+        throw const ServerException('User is null after login');
       }
-
-      //if (user.emailConfirmedAt == null) {
-      //  throw const ServerException('Please verify your email first.');
-      //}
 
       return UserModel.fromJson(user.toJson());
     } on AuthException catch (e) {
@@ -122,15 +118,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel?> getCurrentUserData() async {
     try {
-      if (currentUserSession != null) {
+      final session = supabaseClient.auth.currentSession;
+      if (session != null) {
         final userData = await supabaseClient
             .from('profiles')
             .select('id,name,avatar_url')
-            .eq('id', currentUserSession!.user.id)
+            .eq('id', session.user.id)
             .single();
-
-        return UserModel.fromJson(userData)
-            .copyWith(email: currentUserSession!.user.email);
+        return UserModel.fromJson(userData).copyWith(email: session.user.email);
       }
     } catch (e) {
       throw ServerException(e.toString());
