@@ -12,7 +12,12 @@ Future<void> initDependencies() async {
   final supabase = await Supabase.initialize(
       url: AppSecrets.supabaseUrl,
       anonKey: AppSecrets.supabaseAnonKey,
-      debug: true);
+      debug: true,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers':
+            'authorization, x-client-info, apikey, content-type',
+      });
 
   String hivePath;
   if (kIsWeb) {
