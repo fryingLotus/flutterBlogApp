@@ -7,39 +7,54 @@ Future<void> initDependencies() async {
   _initBlog();
   _initComment();
   _initFollower();
+
+  // Initialize Supabase
   final supabase = await Supabase.initialize(
       url: AppSecrets.supabaseUrl,
       anonKey: AppSecrets.supabaseAnonKey,
       debug: true);
 
-  final appDocDir = await getApplicationDocumentsDirectory();
-  Hive.init(appDocDir.path);
+  String hivePath;
+  if (kIsWeb) {
+    hivePath = '.'; // Use current directory for web
+  } else {
+    final appDocDir = await getApplicationDocumentsDirectory();
+    hivePath = appDocDir.path;
+  }
+
+  // Initialize Hive
+  Hive.init(hivePath);
+
+  // Register Supabase client
   serviceLocator.registerLazySingleton(() => supabase.client);
 
+  // Register other services
   serviceLocator.registerFactory(() => InternetConnection());
-  await Hive.openBox('blogs');
 
+  // Open necessary Hive boxes
+  await Hive.openBox('blogs');
   await Hive.openBox<bool>('likesBox');
   await Hive.openBox<bool>('bookmarksBox');
   await Hive.openBox<bool>('commentLikesBox');
+
+  // Ensure Hive boxes are registered in serviceLocator
   if (!serviceLocator.isRegistered<Box<dynamic>>()) {
     serviceLocator.registerLazySingleton(() => Hive.box('blogs'));
   }
 
-  // Register 'likesBox'
   if (!serviceLocator.isRegistered<Box<bool>>()) {
     serviceLocator.registerLazySingleton(() => Hive.box<bool>('likesBox'));
   }
 
-  // Register 'bookmarksBox'
   if (!serviceLocator.isRegistered<Box<bool>>()) {
     serviceLocator.registerLazySingleton(() => Hive.box<bool>('bookmarksBox'));
   }
-  // Register 'commentLikesBox'
+
   if (!serviceLocator.isRegistered<Box<bool>>()) {
     serviceLocator
         .registerLazySingleton(() => Hive.box<bool>('commentLikesBox'));
   }
+
   serviceLocator.registerLazySingleton(() => AppUserCubit());
   serviceLocator.registerLazySingleton(() => ThemeCubit());
   serviceLocator.registerFactory<ConnectionChecker>(
