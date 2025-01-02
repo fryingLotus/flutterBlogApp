@@ -14,7 +14,7 @@ Future<void> initDependencies() async {
       anonKey: AppSecrets.supabaseAnonKey,
       debug: true,
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://flutter-blog-app.vercel.app/',
         'Access-Control-Allow-Headers':
             'authorization, x-client-info, apikey, content-type',
       });
